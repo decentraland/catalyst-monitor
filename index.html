@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Catalyst Nodes Monitor</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .node {
+            border: solid 1px;
+            border-radius: 10px;
+            margin: 10px;
+            padding: 5px;
+            width: 500px;
+            background-color: #9ec1ff;
+            float: left;
+        }
+        .node-zone {
+            border: solid 1px;
+            border-radius: 10px;
+            margin: 10px;
+            padding: 5px;
+            width: 500px;
+            background-color: #05c3b2;
+            float: right;
+        }
+        .content {
+            border: solid 1px;
+            border-radius: 10px;
+            margin: 3px;
+            padding: 5px;
+            overflow-wrap: break-word;
+            background-color:#c0e4c1;
+        }
+        .lambdas {
+            border: solid 1px;
+            border-radius: 10px;
+            margin: 3px;
+            padding: 5px;
+            overflow-wrap: break-word;
+            background-color:#00bcd4;
+        }
+        .comms {
+            border: solid 1px;
+            border-radius: 10px;
+            margin: 3px;
+            padding: 5px;
+            overflow-wrap: break-word;
+            background-color:#d9c6dc;
+        }
+        .all-status-button {
+            border-radius: 10px;
+            float: right;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/react@16.12.0/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@16.12.0/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="text/babel">
+
+        class ServerMonitor extends React.Component {
+            constructor(props) {
+                super(props);
+
+                this.state = {
+                    content: {},
+                    lambdas: {},
+                    comms: {},
+                };
+            }
+            componentDidMount() {
+                this.getNodeStatus();
+                // this.serverSyncInterval = setInterval(() => {this.getNodeStatus();}, 5*1000);
+            }
+
+            getNodeStatus() {
+                this.getServerStatus('content')
+                this.getServerStatus('lambdas')
+                this.getServerStatus('comms')
+            }
+
+            getServerStatus(server) {
+                console.log(`${this.props.address}/${server}/status`)
+                fetch(`${this.props.address}/${server}/status`)
+                    .then(res => res.json())
+                    .then((data) => this.setState({ [server]: data }))
+                    .catch(console.log)
+            }
+
+
+            render() {
+                return (
+                    <div className={(this.props.address.endsWith(".zone") ? " node-zone" : "node")}>
+                        <div><b>Server:</b> {this.props.address}</div>
+                        <ContentServer status={this.state.content} address={this.props.address} />
+                        <CommsServer   status={this.state.comms}   address={this.props.address} />
+                        <LambdasServer status={this.state.lambdas} address={this.props.address} />
+                    </div>)
+            }
+        }
+
+        function ContentServer(props) {
+            function showAll(e) {
+                Swal.fire({
+                    titleText: props.address + "/content/status",
+                    html: "<pre style='text-align:left'>" + JSON.stringify(props.status, null, 2) + "</pre>",
+                    width: 1000})
+            }
+            return (
+                <div className="content">
+                    <button className="material-icons all-status-button" onClick={showAll}>assignment</button>
+                    <b>Content:</b>
+                    <div>Current Time: {props.status.currentTime}</div>
+                    <div>Immutable Time: {props.status.lastImmutableTime}</div>
+                    <div>History Size: {props.status.historySize}</div>
+                    <div>DAO Size: {props.status.clusterStatus ? props.status.clusterStatus.otherServers.length : 0}</div>
+                    <div>Commit Hash: {props.status.commitHash}</div>
+                    <div>Network: {props.status.ethNetwork}</div>
+                </div>
+            )
+        }
+
+        function LambdasServer(props) {
+            function showAll(e) {
+                Swal.fire({
+                    titleText: props.address + "/lambdas/status",
+                    html: "<pre style='text-align:left'>" + JSON.stringify(props.status, null, 2) + "</pre>",
+                    width: 1000})
+            }
+            return (
+                <div className="lambdas">
+                    <button className="material-icons all-status-button" onClick={showAll}>build</button>
+                    <b>Lambdas:</b>
+                    <div>Content URL: {props.status.contentServerUrl}</div>
+                    <div>Commit Hash: {props.status.commitHash}</div>
+                </div>
+            )
+        }
+
+        function CommsServer(props) {
+            function showAll(e) {
+                Swal.fire({
+                    titleText: props.address + "/comms/status",
+                    html: "<pre style='text-align:left'>" + JSON.stringify(props.status, null, 2) + "</pre>",
+                    width: 1000})
+            }
+            return (
+                <div className="comms">
+                    <button className="material-icons all-status-button" onClick={showAll}>device_hub</button>
+                    <b>Comms:</b>
+                    <div>Name: {props.status.name}</div>
+                    <div>Current Time: {props.status.currenTime}</div>
+                    <div>Commit Hash: {props.status.env ? props.status.env.commitHash : ""}</div>
+                </div>
+            )
+        }
+
+        const servers = [
+            'https://peer.decentraland.org',
+            'https://bot1-catalyst.decentraland.org',
+            'https://peer.manaland.cn',
+
+            'https://bot2-katalyst.decentraland.zone',
+            'https://bot1-catalyst.decentraland.zone',
+            'https://peer.decentraland.zone',
+
+        ]
+
+        function Servers() {
+            return (
+                <div>
+                    {servers.map(server => {return (<ServerMonitor address={server} />)})}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<Servers />, document.getElementById('root'))
+    </script>
+</body>
+
+</html>
