@@ -65,6 +65,7 @@
                     content: {},
                     lambdas: {},
                     comms: {},
+                    failedDeployments: -1,
                 };
             }
             componentDidMount() {
@@ -76,22 +77,28 @@
                 this.getServerStatus('content')
                 this.getServerStatus('lambdas')
                 this.getServerStatus('comms')
+                this.getFailedDeployments()
             }
 
             getServerStatus(server) {
-                console.log(`${this.props.address}/${server}/status`)
                 fetch(`${this.props.address}/${server}/status`)
                     .then(res => res.json())
                     .then((data) => this.setState({ [server]: data }))
                     .catch(console.log)
             }
 
+            getFailedDeployments() {
+                fetch(`${this.props.address}/content/failedDeployments`)
+                    .then(res => res.json())
+                    .then((data) => this.setState({ failedDeployments: data.length }))
+                    .catch(console.log)
+            }
 
             render() {
                 return (
                     <div className={(this.props.address.endsWith(".zone") ? "node node-zone" : "node node-org")}>
                         <div><b>Server:</b> {this.props.address}</div>
-                        <ContentServer status={this.state.content} address={this.props.address} />
+                        <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.failedDeployments} />
                         <CommsServer   status={this.state.comms}   address={this.props.address} />
                         <LambdasServer status={this.state.lambdas} address={this.props.address} />
                     </div>)
@@ -107,6 +114,7 @@
                     <div>Immutable Time Delta: {deltaTime(props.status.lastImmutableTime)}</div>
                     <div>History #: {props.status.historySize}</div>
                     <div>DAO #: {props.status.clusterStatus ? props.status.clusterStatus.otherServers.length : 0}</div>
+                    <div>Failed: {props.failedDeployments}</div>
                     <div>Network: {props.status.ethNetwork}</div>
                 </div>
             )
