@@ -8,46 +8,35 @@
         body {
             font-family: Arial, Helvetica, sans-serif;
         }
+        .node-set {
+            display: flex;
+        }
         .node {
             border: solid 1px;
             border-radius: 10px;
             margin: 10px;
             padding: 5px;
-            width: 500px;
+            width: 400px;
+        }
+        .node-org {
             background-color: #9ec1ff;
-            float: left;
         }
         .node-zone {
-            border: solid 1px;
-            border-radius: 10px;
-            margin: 10px;
-            padding: 5px;
-            width: 500px;
             background-color: #05c3b2;
-            float: right;
         }
-        .content {
+        .server {
             border: solid 1px;
             border-radius: 10px;
             margin: 3px;
             padding: 5px;
-            overflow-wrap: break-word;
+        }
+        .content {
             background-color:#c0e4c1;
         }
         .lambdas {
-            border: solid 1px;
-            border-radius: 10px;
-            margin: 3px;
-            padding: 5px;
-            overflow-wrap: break-word;
             background-color:#00bcd4;
         }
         .comms {
-            border: solid 1px;
-            border-radius: 10px;
-            margin: 3px;
-            padding: 5px;
-            overflow-wrap: break-word;
             background-color:#d9c6dc;
         }
         .all-status-button {
@@ -100,7 +89,7 @@
 
             render() {
                 return (
-                    <div className={(this.props.address.endsWith(".zone") ? " node-zone" : "node")}>
+                    <div className={(this.props.address.endsWith(".zone") ? "node node-zone" : "node node-org")}>
                         <div><b>Server:</b> {this.props.address}</div>
                         <ContentServer status={this.state.content} address={this.props.address} />
                         <CommsServer   status={this.state.comms}   address={this.props.address} />
@@ -110,76 +99,78 @@
         }
 
         function ContentServer(props) {
-            function showAll(e) {
-                Swal.fire({
-                    titleText: props.address + "/content/status",
-                    html: "<pre style='text-align:left'>" + JSON.stringify(props.status, null, 2) + "</pre>",
-                    width: 1000})
-            }
             return (
-                <div className="content">
-                    <button className="material-icons all-status-button" onClick={showAll}>assignment</button>
-                    <b>Content:</b>
-                    <div>Current Time: {props.status.currentTime}</div>
-                    <div>Immutable Time: {props.status.lastImmutableTime}</div>
-                    <div>History Size: {props.status.historySize}</div>
-                    <div>DAO Size: {props.status.clusterStatus ? props.status.clusterStatus.otherServers.length : 0}</div>
-                    <div>Commit Hash: {props.status.commitHash}</div>
+                <div className="server content">
+                    <button className="material-icons all-status-button" onClick={() => showFullStatus(props, "content")}>assignment</button>
+                    <b>Content - {shortHash(props.status.commitHash)}</b>
+                    <div>Current Time Delta: {deltaTime(props.status.currentTime)}</div>
+                    <div>Immutable Time Delta: {deltaTime(props.status.lastImmutableTime)}</div>
+                    <div>History #: {props.status.historySize}</div>
+                    <div>DAO #: {props.status.clusterStatus ? props.status.clusterStatus.otherServers.length : 0}</div>
                     <div>Network: {props.status.ethNetwork}</div>
                 </div>
             )
         }
 
-        function LambdasServer(props) {
-            function showAll(e) {
-                Swal.fire({
-                    titleText: props.address + "/lambdas/status",
-                    html: "<pre style='text-align:left'>" + JSON.stringify(props.status, null, 2) + "</pre>",
-                    width: 1000})
-            }
-            return (
-                <div className="lambdas">
-                    <button className="material-icons all-status-button" onClick={showAll}>build</button>
-                    <b>Lambdas:</b>
-                    <div>Content URL: {props.status.contentServerUrl}</div>
-                    <div>Commit Hash: {props.status.commitHash}</div>
-                </div>
-            )
-        }
-
         function CommsServer(props) {
-            function showAll(e) {
-                Swal.fire({
-                    titleText: props.address + "/comms/status",
-                    html: "<pre style='text-align:left'>" + JSON.stringify(props.status, null, 2) + "</pre>",
-                    width: 1000})
-            }
             return (
-                <div className="comms">
-                    <button className="material-icons all-status-button" onClick={showAll}>device_hub</button>
-                    <b>Comms:</b>
+                <div className="server comms">
+                    <button className="material-icons all-status-button" onClick={() => showFullStatus(props, "comms")}>device_hub</button>
+                    <b>Comms - {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</b>
+                    <div>Current Time Delta: {deltaTime(props.status.currenTime)}</div>
                     <div>Name: {props.status.name}</div>
-                    <div>Current Time: {props.status.currenTime}</div>
-                    <div>Commit Hash: {props.status.env ? props.status.env.commitHash : ""}</div>
                 </div>
             )
         }
 
-        const servers = [
+        function LambdasServer(props) {
+            return (
+                <div className="server lambdas">
+                    <button className="material-icons all-status-button" onClick={() => showFullStatus(props, "lambdas")}>build</button>
+                    <b>Lambdas - {shortHash(props.status.commitHash)}</b>
+                    <div>{props.status.contentServerUrl}</div>
+                </div>
+            )
+        }
+
+        function showFullStatus(props, server) {
+            Swal.fire({
+                    titleText: `${props.address}/${server}/status`,
+                    html: "<pre style='text-align:left'>" + JSON.stringify(props.status, null, 2) + "</pre>",
+                    width: 1000})
+        }
+
+        function shortHash(hash) {
+            if (hash && hash.length > 8) {
+                return hash.slice(0,3) + '..' + hash.slice(-3)
+            }
+            return hash
+        }
+
+        function deltaTime(externalTime) {
+            if (externalTime) {
+                return new Date() - externalTime
+            }
+            return "?"
+        }
+
+        const orgServers = [
             'https://peer.decentraland.org',
             'https://bot1-catalyst.decentraland.org',
             'https://peer.manaland.cn',
-
-            'https://bot2-katalyst.decentraland.zone',
-            'https://bot1-catalyst.decentraland.zone',
+            'https://interconnected.online',
+        ]
+        const zoneServers = [
             'https://peer.decentraland.zone',
-
+            'https://bot1-catalyst.decentraland.zone',
+            'https://bot2-katalyst.decentraland.zone',
         ]
 
         function Servers() {
             return (
                 <div>
-                    {servers.map(server => {return (<ServerMonitor address={server} />)})}
+                    <div className="node-set">{orgServers.map(server => {return (<ServerMonitor address={server} />)})}</div>
+                    <div className="node-set">{zoneServers.map(server => {return (<ServerMonitor address={server} />)})}</div>
                 </div>
             );
         }
