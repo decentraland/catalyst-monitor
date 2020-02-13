@@ -149,7 +149,24 @@
 
         function deltaTime(externalTime) {
             if (externalTime) {
-                return new Date() - externalTime
+                const deltaMillis = new Date() - externalTime
+                if (deltaMillis < 1000) {
+                    return `${deltaMillis} millis`
+                }
+                const deltaSeconds = deltaMillis / 1000
+                if (deltaSeconds < 60) {
+                    return `${deltaSeconds.toFixed(2)} seconds`
+                }
+                const deltaMinutes = deltaSeconds / 60
+                if (deltaMinutes < 60) {
+                    return `${deltaMinutes.toFixed(2)} minutes`
+                }
+                const deltaHours = deltaMinutes / 60
+                if (deltaHours < 24) {
+                    return `${deltaHours.toFixed(2)} hours`
+                }
+                const deltaDays = deltaHours / 24
+                return `${deltaDays.toFixed(2)} days`
             }
             return "?"
         }
