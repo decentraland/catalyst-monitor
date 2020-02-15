@@ -12,24 +12,26 @@
         .node-set {
             display: flex;
         }
-        .node {
+        /* Nodes */
+        .node-prd, .node-dev {
             border: solid 1px;
             border-radius: 7px;
             margin: 3px;
             padding: 2px;
         }
-        .node-org {
+        .node-prd {
             background-color: #9ec1ff;
         }
-        .node-zone {
+        .node-dev {
             background-color: #05c3b2;
         }
-        .server {
+        .content, .lambdas, .comms {
             border: solid 1px;
             border-radius: 7px;
             margin: 3px;
             padding: 3px;
         }
+        /* Servers */
         .content {
             background-color:#c0e4c1;
         }
@@ -38,10 +40,6 @@
         }
         .comms {
             background-color:#d9c6dc;
-        }
-        .all-status-button {
-            border-radius: 7px;
-            float: right;
         }
 
     </style>
@@ -65,7 +63,7 @@
                     content: {},
                     lambdas: {},
                     comms: {},
-                    failedDeployments: -1,
+                    failedDeployments: "?",
                 };
             }
             componentDidMount() {
@@ -90,13 +88,13 @@
             getFailedDeployments() {
                 fetch(`${this.props.address}/content/failedDeployments`)
                     .then(res => res.json())
-                    .then((data) => this.setState({ failedDeployments: data.length }))
+                    .then((data) => this.setState({ failedDeployments: data }))
                     .catch(console.log)
             }
 
             render() {
                 return (
-                    <div className={(this.props.address.endsWith(".zone") ? "node node-zone" : "node node-org")}>
+                    <div className={(this.props.address.endsWith(".zone") ? "node-dev" : "node-prd")}>
                         <div><b>{this.props.address}</b></div>
                         <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.failedDeployments} />
                         <CommsServer   status={this.state.comms}   address={this.props.address} />
@@ -107,14 +105,13 @@
 
         function ContentServer(props) {
             return (
-                <div className="server content">
-                    <button className="material-icons all-status-button" onClick={() => showFullStatus(props, "content")}>assignment</button>
+                <div className="content" onClick={() => showFullStatus(props, "content", [{name: "Failed Deployments", data: props.failedDeployments}])}>
                     <b>Content - {shortHash(props.status.commitHash)}</b>
                     <div>CTD: {deltaTime(props.status.currentTime)}</div>
                     <div>ITD: {deltaTime(props.status.lastImmutableTime)}</div>
                     <div>History #: {props.status.historySize}</div>
                     <div>DAO #: {props.status.clusterStatus ? props.status.clusterStatus.otherServers.length : 0}</div>
-                    <div>Failed: {props.failedDeployments}</div>
+                    <div>Failed: {Array.isArray(props.failedDeployments) ? props.failedDeployments.length : props.failedDeployments}</div>
                     <div>Eth: {props.status.ethNetwork}</div>
                 </div>
             )
@@ -122,8 +119,7 @@
 
         function CommsServer(props) {
             return (
-                <div className="server comms">
-                    <button className="material-icons all-status-button" onClick={() => showFullStatus(props, "comms")}>device_hub</button>
+                <div className="comms" onClick={() => showFullStatus(props, "comms", [])}>
                     <b>Comms - {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</b>
                     <div>CTD: {deltaTime(props.status.currenTime)}</div>
                     <div>Name: {props.status.name}</div>
@@ -137,19 +133,24 @@
             const contentServerUrlOk = (currentContentServerUrl===expectedContentServerUrl) || (currentContentServerUrl===(expectedContentServerUrl+'/'))
             const contentServerUrlStatus = contentServerUrlOk ? "OK" : `ERROR: ${currentContentServerUrl}`
             return (
-                <div className="server lambdas">
-                    <button className="material-icons all-status-button" onClick={() => showFullStatus(props, "lambdas")}>build</button>
+                <div className="lambdas" onClick={() => showFullStatus(props, "lambdas", [])}>
                     <b>Lambdas - {shortHash(props.status.commitHash)}</b>
                     <div>CSU: {contentServerUrlStatus}</div>
                 </div>
             )
         }
 
-        function showFullStatus(props, server) {
+        function showFullStatus(props, server, extraInfos) {
+            const statusUrl = `${props.address}/${server}/status`
+            const contentHtml =
+                "<pre style='text-align:left'>" +
+                    `<div>${JSON.stringify(props.status, null, 2)}</div>` +
+                    extraInfos.map(extraInfo => `<div>${extraInfo.name}: ${JSON.stringify(extraInfo.data, null, 2)}</div>`).join() +
+                "</pre>"
             Swal.fire({
-                    titleText: `${props.address}/${server}/status`,
-                    html: "<pre style='text-align:left'>" + JSON.stringify(props.status, null, 2) + "</pre>",
-                    width: 1000})
+                title: `<a href=${statusUrl}>${statusUrl}</a>`,
+                html: contentHtml,
+                width: 1000})
         }
 
         function shortHash(hash) {
@@ -191,6 +192,7 @@
             'https://peer.decentral.games',  // Baus & SFox
             'https://peer.melonwave.com',    // Ari
             'https://www.decentraland.club', // JJ
+            'https://peer.kyllian.me', // Kyllian
         ]
         const zoneServers = [
             'https://peer.decentraland.zone',
