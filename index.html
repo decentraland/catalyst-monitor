@@ -32,6 +32,14 @@
             font-weight: bold;
             padding: 4px;
         }
+        .total-productive-users {
+            border: solid 1px;
+            border-radius: 7px;
+            margin: 3px;
+            padding: 2px;
+            background-color: #9ec1ff;
+            width: 110px;
+        }
         /* Servers */
         .content, .lambdas, .comms {
             border: solid 1px;
@@ -105,7 +113,10 @@
             getCommsLayersStatus() {
                 fetch(`${this.props.address}/comms/layers`)
                     .then(res => res.json())
-                    .then((data) => this.setState({ commsLayers: data }))
+                    .then((data) => {
+                        this.setState({ commsLayers: data })
+                        const usersInNode = data.map(layer => layer.usersCount).reduce((a,b) => a+b, 0)
+                        this.props.contributeUsers(usersInNode)})
                     .catch(console.log)
             }
 
@@ -226,15 +237,31 @@
             'https://bot2-katalyst.decentraland.zone',
         ]
 
-        function Servers() {
-            const currentUrl = window.location.href.toString()
-            const extraServers = currentUrl.indexOf("includeDevServers") >= 0 ? zoneServers : []
-            return (
-                <div>
-                    <div className="node-set">{productiveServers.map(server => {return (<ServerMonitor address={server} />)})}</div>
-                    <div className="node-set">{extraServers.map(server => {return (<ServerMonitor address={server} />)})}</div>
-                </div>
-            );
+        class Servers extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    totalProductiveUsers: 0,
+                };
+            }
+
+            sumProductiveUsers(usersCount) {
+                this.setState({ totalProductiveUsers: this.state.totalProductiveUsers + usersCount })
+            }
+
+            render() {
+                const currentUrl = window.location.href.toString()
+                const extraServers = currentUrl.indexOf("includeDevServers") >= 0 ? zoneServers : []
+                return (
+                    <div>
+                        <div className="node-set">{productiveServers.map(server => {return (<ServerMonitor address={server} contributeUsers={(usersCount) => this.sumProductiveUsers(usersCount)}/>)})}</div>
+                        <div className="total-productive-users">Total Users: {this.state.totalProductiveUsers}</div>
+
+                        <div className="node-set">{extraServers.map(server => {return (<ServerMonitor address={server} />)})}</div>
+                    </div>
+                );
+            }
+
         }
 
         ReactDOM.render(<Servers />, document.getElementById('root'))
