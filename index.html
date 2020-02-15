@@ -25,13 +25,21 @@
         .node-dev {
             background-color: #05c3b2;
         }
+        .node-wrong {
+            background-color: red;
+        }
+        .node-title {
+            font-weight: bold;
+            padding: 4px;
+        }
+        /* Servers */
         .content, .lambdas, .comms {
             border: solid 1px;
             border-radius: 7px;
             margin: 3px;
             padding: 3px;
+            cursor: pointer;
         }
-        /* Servers */
         .content {
             background-color:#c0e4c1;
         }
@@ -93,9 +101,15 @@
             }
 
             render() {
+                let title = this.props.address
+                let isHttps = false
+                if (this.props.address.startsWith("https://")) {
+                    title = this.props.address.substring("https://".length)
+                    isHttps = true
+                }
                 return (
-                    <div className={(this.props.address.endsWith(".zone") ? "node-dev" : "node-prd")}>
-                        <div><b>{this.props.address}</b></div>
+                    <div className={(this.props.address.endsWith(".zone") ? "node-dev" : "node-prd") + (isHttps ? "" : " node-wrong" )}>
+                        <div className="node-title">{title}</div>
                         <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.failedDeployments} />
                         <CommsServer   status={this.state.comms}   address={this.props.address} />
                         <LambdasServer status={this.state.lambdas} address={this.props.address} />
