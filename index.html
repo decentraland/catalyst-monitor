@@ -71,7 +71,8 @@
                     content: {},
                     lambdas: {},
                     comms: {},
-                    failedDeployments: "?",
+                    contentFailedDeployments: "?",
+                    commsLayers: [],
                 };
             }
             componentDidMount() {
@@ -83,7 +84,8 @@
                 this.getServerStatus('content')
                 this.getServerStatus('lambdas')
                 this.getServerStatus('comms')
-                this.getFailedDeployments()
+                this.getContentFailedDeployments()
+                this.getCommsLayersStatus()
             }
 
             getServerStatus(server) {
@@ -93,10 +95,17 @@
                     .catch(console.log)
             }
 
-            getFailedDeployments() {
+            getContentFailedDeployments() {
                 fetch(`${this.props.address}/content/failedDeployments`)
                     .then(res => res.json())
-                    .then((data) => this.setState({ failedDeployments: data }))
+                    .then((data) => this.setState({ contentFailedDeployments: data }))
+                    .catch(console.log)
+            }
+
+            getCommsLayersStatus() {
+                fetch(`${this.props.address}/comms/layers`)
+                    .then(res => res.json())
+                    .then((data) => this.setState({ commsLayers: data }))
                     .catch(console.log)
             }
 
@@ -110,8 +119,8 @@
                 return (
                     <div className={(this.props.address.endsWith(".zone") ? "node-dev" : "node-prd") + (isHttps ? "" : " node-wrong" )}>
                         <div className="node-title">{title}</div>
-                        <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.failedDeployments} />
-                        <CommsServer   status={this.state.comms}   address={this.props.address} />
+                        <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.contentFailedDeployments} />
+                        <CommsServer   status={this.state.comms}   address={this.props.address} layers={this.state.commsLayers}/>
                         <LambdasServer status={this.state.lambdas} address={this.props.address} />
                     </div>)
             }
@@ -132,11 +141,14 @@
         }
 
         function CommsServer(props) {
+            const maxLayerName = Math.max(...props.layers.map(layer => layer.name.length))
+            const minifiedLayers = props.layers.map(layer => `${layer.name.padEnd(maxLayerName)}: ${layer.usersCount}/${layer.maxUsers}`)
             return (
-                <div className="comms" onClick={() => showFullStatus(props, "comms", [])}>
+                <div className="comms" onClick={() => showFullStatus(props, "comms", [{name: "Layers", data: minifiedLayers}])}>
                     <b>Comms - {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</b>
                     <div>CTD: {deltaTime(props.status.currenTime)}</div>
                     <div>Name: {props.status.name}</div>
+                    {props.layers.filter(layer => layer.usersCount>0).map(layer => <div>{layer.name}: {layer.usersCount}/{layer.maxUsers}</div>)}
                 </div>
             )
         }
@@ -158,7 +170,7 @@
             const statusUrl = `${props.address}/${server}/status`
             const contentHtml =
                 "<pre style='text-align:left'>" +
-                    `<div>${JSON.stringify(props.status, null, 2)}</div>` +
+                    `<div>Status: ${JSON.stringify(props.status, null, 2)}</div>` +
                     extraInfos.map(extraInfo => `<div>${extraInfo.name}: ${JSON.stringify(extraInfo.data, null, 2)}</div>`).join() +
                 "</pre>"
             Swal.fire({
@@ -206,7 +218,7 @@
             'https://peer.decentral.games',  // Baus & SFox
             'https://peer.melonwave.com',    // Ari
             'https://www.decentraland.club', // JJ
-            'https://peer.kyllian.me', // Kyllian
+            'https://peer.kyllian.me',       // Kyllian
         ]
         const zoneServers = [
             'https://peer.decentraland.zone',
