@@ -98,8 +98,8 @@
                 return (
                     <div className={(this.props.address.endsWith(".zone") ? "node node-zone" : "node node-org")}>
                         <div><b>{this.props.address}</b></div>
-                        <ContentServer status={this.state.content} failedDeployments={this.state.failedDeployments} />
-                        <CommsServer   status={this.state.comms} />
+                        <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.failedDeployments} />
+                        <CommsServer   status={this.state.comms}   address={this.props.address} />
                         <LambdasServer status={this.state.lambdas} address={this.props.address} />
                     </div>)
             }
