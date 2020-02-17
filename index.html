@@ -32,13 +32,18 @@
             font-weight: bold;
             padding: 4px;
         }
-        .total-productive-users {
+        .total-productive-users, .total-dev-users {
             border: solid 1px;
             border-radius: 7px;
             margin: 3px;
             padding: 2px;
-            background-color: #9ec1ff;
             width: 110px;
+        }
+        .total-productive-users {
+            background-color: #9ec1ff;
+        }
+        .total-dev-users {
+            background-color: #05c3b2;
         }
         /* Servers */
         .content, .lambdas, .comms {
@@ -138,13 +143,14 @@
         }
 
         function ContentServer(props) {
+            const clusterInfo = props.status.synchronizationStatus ? props.status.synchronizationStatus : (props.status.clusterStatus ? props.status.clusterStatus : undefined)
             return (
                 <div className="content" onClick={() => showFullStatus(props, "content", [{name: "Failed Deployments", data: props.failedDeployments}])}>
                     <b>Content - {shortHash(props.status.commitHash)}</b>
                     <div>CTD: {deltaTime(props.status.currentTime)}</div>
                     <div>ITD: {deltaTime(props.status.lastImmutableTime)}</div>
                     <div>History #: {props.status.historySize}</div>
-                    <div>DAO #: {props.status.clusterStatus ? props.status.clusterStatus.otherServers.length : 0}</div>
+                    <div>DAO #: {clusterInfo ? clusterInfo.otherServers.length : 0}</div>
                     <div>Failed: {Array.isArray(props.failedDeployments) ? props.failedDeployments.length : props.failedDeployments}</div>
                     <div>Eth: {props.status.ethNetwork}</div>
                 </div>
@@ -243,6 +249,7 @@
                 super(props);
                 this.state = {
                     totalProductiveUsers: 0,
+                    totalDevUsers: 0,
                 };
             }
 
@@ -250,15 +257,38 @@
                 this.setState({ totalProductiveUsers: this.state.totalProductiveUsers + usersCount })
             }
 
-            render() {
-                const currentUrl = window.location.href.toString()
-                const extraServers = currentUrl.indexOf("includeDevServers") >= 0 ? zoneServers : []
+            sumDevUsers(usersCount) {
+                this.setState({ totalDevUsers: this.state.totalDevUsers + usersCount })
+            }
+
+            renderProductiveServers() {
                 return (
                     <div>
-                        <div className="node-set">{productiveServers.map(server => {return (<ServerMonitor address={server} contributeUsers={(usersCount) => this.sumProductiveUsers(usersCount)}/>)})}</div>
+                        <div className="node-set">{productiveServers.map(server => {return (<ServerMonitor address={server} contributeUsers={(usersCount) => this.sumProductiveUsers(usersCount)} />)})}</div>
                         <div className="total-productive-users">Total Users: {this.state.totalProductiveUsers}</div>
+                    </div>
+                );
+            }
 
-                        <div className="node-set">{extraServers.map(server => {return (<ServerMonitor address={server} />)})}</div>
+            renderExtraServers() {
+                const currentUrl = window.location.href.toString()
+                if ( currentUrl.indexOf("includeDevServers")>=0 ) {
+                    return (
+                        <div>
+                            <div className="node-set">{zoneServers.map(server => {return (<ServerMonitor address={server} contributeUsers={(usersCount) => this.sumDevUsers(usersCount)} />)})}</div>
+                            <div className="total-dev-users">Total Users: {this.state.totalDevUsers}</div>
+                        </div>
+                    );
+                } else {
+                    return (<div />)
+                }
+            }
+
+            render() {
+                return (
+                    <div>
+                        {this.renderProductiveServers()}
+                        {this.renderExtraServers()}
                     </div>
                 );
             }
