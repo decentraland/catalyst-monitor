@@ -46,7 +46,7 @@
             background-color: #05c3b2;
         }
         /* Servers */
-        .content, .lambdas, .comms {
+        .content, .lambdas, .comms, .server-node-users {
             border: solid 1px;
             border-radius: 7px;
             margin: 3px;
@@ -61,6 +61,12 @@
         }
         .comms {
             background-color:#d9c6dc;
+        }
+        .server-node-users {
+            background-color:#e172f3;
+            cursor: auto;
+            position: inherit;
+	        bottom: 0px;
         }
         /* Commits */
         .commit-info-container {
@@ -154,19 +160,21 @@
                     title = this.props.address.substring("https://".length)
                     isHttps = true
                 }
+                let isStatusReceived = this.state.content.version && this.state.lambdas.version && this.state.comms.version
                 return (
-                    <div className={(this.props.address.endsWith(".zone") ? "node-dev" : "node-prd") + (isHttps ? "" : " node-wrong" )}>
+                    <div className={(this.props.expectedEthNetwork==="mainnet" ? "node-prd" : "node-dev") + (isHttps && isStatusReceived ? "" : " node-wrong" )}>
                         <div className="node-title">{title}</div>
-                        <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.contentFailedDeployments} />
+                        <div className="server-node-users"># {this.state.comms.name}: {this.state.usersInServer}</div>
+                        <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.contentFailedDeployments} expectedEthNetwork={this.props.expectedEthNetwork}/>
                         <LambdasServer status={this.state.lambdas} address={this.props.address} />
                         <CommsServer   status={this.state.comms}   address={this.props.address} layers={this.state.commsLayers}/>
-                        <div className="comms"># Users: {this.state.usersInServer}</div>
                     </div>)
             }
         }
 
         function ContentServer(props) {
             const clusterInfo = props.status.synchronizationStatus ? props.status.synchronizationStatus : (props.status.clusterStatus ? props.status.clusterStatus : undefined)
+            const expectedEthNetworkOk = props.status.ethNetwork === props.expectedEthNetwork
             return (
                 <div className="content" onClick={() => showFullStatus(props, "content", [{name: "Failed Deployments", data: props.failedDeployments}])}>
                     <b>Content - {shortHash(props.status.commitHash)}</b>
@@ -175,7 +183,7 @@
                     <div>History #: {props.status.historySize}</div>
                     <div>DAO #: {clusterInfo ? clusterInfo.otherServers.length : 0}</div>
                     <div>Failed: {Array.isArray(props.failedDeployments) ? props.failedDeployments.length : props.failedDeployments}</div>
-                    <div>Eth: {props.status.ethNetwork}</div>
+                    <div>{!expectedEthNetworkOk ? "Eth: " + props.status.ethNetwork : ""}</div>
                 </div>
             )
         }
@@ -186,8 +194,6 @@
             return (
                 <div className="comms" onClick={() => showFullStatus(props, "comms", [{name: "Layers", data: minifiedLayers}])}>
                     <b>Comms - {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</b>
-                    <div>CTD: {deltaTime(props.status.currenTime)}</div>
-                    <div>Name: {props.status.name}</div>
                     {props.layers.filter(layer => layer.usersCount>0).map(layer => <div>{layer.name}: {layer.usersCount}/{layer.maxUsers}</div>)}
                 </div>
             )
@@ -201,7 +207,7 @@
             return (
                 <div className="lambdas" onClick={() => showFullStatus(props, "lambdas", [])}>
                     <b>Lambdas - {shortHash(props.status.commitHash)}</b>
-                    <div>CSU: {contentServerUrlStatus}</div>
+                    <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
                 </div>
             )
         }
@@ -257,9 +263,11 @@
             return "Unknown time"
         }
 
+        // const productiveServers = []
         const productiveServers = [
             'https://peer.decentraland.org',           // DCL
             'https://peer-ec1.decentraland.org',       // DCL - East
+            'https://peer-wc1.decentraland.org',       // DCL - West
             'https://peer.manaland.cn',                // DCL - China
             'https://interconnected.online',           // Esteban
             'https://peer.decentral.games',            // Baus
@@ -318,7 +326,7 @@
             renderProductiveServers() {
                 return (
                     <div>
-                        <div className="node-set">{productiveServers.map(server => {return (<ServerMonitor address={server} contributeUsers={(usersCount) => this.sumProductiveUsers(usersCount)} contributeCommitHash={(commitHash => this.addCommitHash(commitHash))} />)})}</div>
+                        <div className="node-set">{productiveServers.map(server => {return (<ServerMonitor address={server} expectedEthNetwork="mainnet" contributeUsers={(usersCount) => this.sumProductiveUsers(usersCount)} contributeCommitHash={(commitHash => this.addCommitHash(commitHash))} />)})}</div>
                         <div className="total-productive-users">Total Users: {this.state.totalProductiveUsers}</div>
                     </div>
                 );
@@ -329,7 +337,7 @@
                 if ( currentUrl.indexOf("includeDevServers")>=0 ) {
                     return (
                         <div>
-                            <div className="node-set">{zoneServers.map(server => {return (<ServerMonitor address={server} contributeUsers={(usersCount) => this.sumDevUsers(usersCount)} contributeCommitHash={(commitHash => this.addCommitHash(commitHash))} />)})}</div>
+                            <div className="node-set">{zoneServers.map(server => {return (<ServerMonitor address={server} expectedEthNetwork="ropsten" contributeUsers={(usersCount) => this.sumDevUsers(usersCount)} contributeCommitHash={(commitHash => this.addCommitHash(commitHash))} />)})}</div>
                             <div className="total-dev-users">Total Users: {this.state.totalDevUsers}</div>
                         </div>
                     );
