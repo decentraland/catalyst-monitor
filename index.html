@@ -102,6 +102,7 @@
                     comms: {},
                     contentFailedDeployments: "?",
                     commsLayers: [],
+                    usersInServer: 0,
                 };
             }
             componentDidMount() {
@@ -140,9 +141,9 @@
                 fetch(`${this.props.address}/comms/layers`)
                     .then(res => res.json())
                     .then((data) => {
-                        this.setState({ commsLayers: data })
-                        const usersInNode = data.map(layer => layer.usersCount).reduce((a,b) => a+b, 0)
-                        this.props.contributeUsers(usersInNode)})
+                        const usersInServer = data.map(layer => layer.usersCount).reduce((a,b) => a+b, 0)
+                        this.setState({ commsLayers: data, usersInServer })
+                        this.props.contributeUsers(usersInServer)})
                     .catch(console.log)
             }
 
@@ -157,8 +158,9 @@
                     <div className={(this.props.address.endsWith(".zone") ? "node-dev" : "node-prd") + (isHttps ? "" : " node-wrong" )}>
                         <div className="node-title">{title}</div>
                         <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.contentFailedDeployments} />
-                        <CommsServer   status={this.state.comms}   address={this.props.address} layers={this.state.commsLayers}/>
                         <LambdasServer status={this.state.lambdas} address={this.props.address} />
+                        <CommsServer   status={this.state.comms}   address={this.props.address} layers={this.state.commsLayers}/>
+                        <div className="comms"># Users: {this.state.usersInServer}</div>
                     </div>)
             }
         }
@@ -257,7 +259,7 @@
 
         const productiveServers = [
             'https://peer.decentraland.org',           // DCL
-            'https://peer-ec-1.decentraland.org',      // DCL - East
+            'https://peer-ec1.decentraland.org',       // DCL - East
             'https://peer.manaland.cn',                // DCL - China
             'https://interconnected.online',           // Esteban
             'https://peer.decentral.games',            // Baus
