@@ -411,20 +411,21 @@
                 const referenceSnapshotsEntries = await Promise.all(ENTITY_TYPES.map((entityType) => this.fetchSnapshot(referenceServer, entityType).then(snapshot => [entityType, snapshot])))
                 const referenceSnapshots = new Map(referenceSnapshotsEntries)
 
-                const compares = await Promise.all(servers.slice(1).map(server => this.compareAgainstReference(referenceServer, referenceSnapshots, server)))
-
-                const syncResult = new Map()
-                for (const { worstEntityId, worstTimeDiff, error, server } of compares) {
-                    if (error) {
-                        syncResult.set(server, `An error happened: ${error}`)
-                    } else if (worstEntityId) {
-                        syncResult.set(server, `A difference of ${millisToHumanTime(worstTimeDiff)} was found. Check entity ${worstEntityId}`)
-                    } else {
-                        syncResult.set(server, 'No differences found')
-                    }
-                }
-
-                this.setState({ syncCheck: syncResult })
+                let results = 0
+                servers.slice(1).map(server => this.compareAgainstReference(referenceServer, referenceSnapshots, server))
+                    .map(async (promise) => {
+                        const { worstEntityId, worstTimeDiff, error, server } = await promise
+                        const syncResult = this.state.syncCheck
+                        const indexedServer = `${++results}/${servers.length - 1} - ${server}`
+                        if (error) {
+                            syncResult.set(indexedServer, `An error happened: ${error}`)
+                        } else if (worstEntityId) {
+                            syncResult.set(indexedServer, `A difference of ${millisToHumanTime(worstTimeDiff)} was found. Check entity ${worstEntityId}`)
+                        } else {
+                            syncResult.set(indexedServer, 'No differences found')
+                        }
+                        this.setState({ syncCheck: syncResult })
+                    })
             }
 
             async compareAgainstReference(referenceServer, referenceSnapshots, server) {
