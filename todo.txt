@@ -1,5 +1,0 @@
-- Add a list at the bottom with all the commit hashes, their dates and how many servers are pointing to each one (and maybe a check to ensure all are in the same commit)
-- Add a check to ensure all the Current Times and all the Immutable Times are similar.
-- Identify somehow the nodes that are outside the DAO.
-
-- Add a timer telling when was the last refresh and how much left for the next one (and maybe a refresh now button).
