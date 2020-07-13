@@ -359,11 +359,11 @@
                     if (this.state.syncCheck) {
                         result = this.state.syncCheck.size === 0 ?
                             "  Calculating..." :
-                            (<ul>{ Array.from(this.state.syncCheck.entries()).map(([server, value]) => <li>{server}: {value}</li>) }</ul>)
+                            (<ul>{ Array.from(this.state.syncCheck.entries()).map(([server, value]) => <li><b>{server}</b>: {value}</li>) }</ul>)
                     }
                     compareSnapshots = (
                         <div>
-                            <input type="button" value="Compare Snapshots" onClick={() => this.verifySync(productiveServers)}/>
+                            <input type="button" title="Compare against peer.decentraland.org" value="Compare Snapshots" onClick={() => this.verifySync(productiveServers )}/>
                             { result }
                         </div>
                     )
@@ -414,40 +414,46 @@
                 let results = 0
                 servers.slice(1).map(server => this.compareAgainstReference(referenceServer, referenceSnapshots, server))
                     .map(async (promise) => {
-                        const { worstEntityId, worstTimeDiff, error, server } = await promise
+                        const { worstPointer, worstTimeDiff, worstSnapshotDiff, error, server } = await promise
                         const syncResult = this.state.syncCheck
                         const indexedServer = `${++results}/${servers.length - 1} - ${server}`
+                        const snapshotDiff = `${Math.sign(worstSnapshotDiff) < 0 ? Math.sign(worstSnapshotDiff) : "+"}${millisToHumanTime(Math.abs(worstSnapshotDiff))}`
                         if (error) {
                             syncResult.set(indexedServer, `An error happened: ${error}`)
-                        } else if (worstEntityId) {
-                            syncResult.set(indexedServer, `A difference of ${millisToHumanTime(worstTimeDiff)} was found. Check entity ${worstEntityId}`)
+                        } else if (worstPointer) {
+                            syncResult.set(indexedServer, `Snapshot diff: ${snapshotDiff}. A difference of ${millisToHumanTime(worstTimeDiff)} was found. Check pointer ${worstPointer}`)
                         } else {
-                            syncResult.set(indexedServer, 'No differences found')
+                            syncResult.set(indexedServer, `Snapshot diff: ${snapshotDiff}. No differences found`)
                         }
                         this.setState({ syncCheck: syncResult })
                     })
             }
 
             async compareAgainstReference(referenceServer, referenceSnapshots, server) {
-                let worstEntityId = undefined
+                let worstPointer = undefined
                 let worstTimeDiff = 0
                 let errorMessage = undefined
+                let worstSnapshotDiff = 0
 
                 try {
                     for (const entityType of ENTITY_TYPES) {
                         const [referenceSnapshotTime, referenceSnapshot] = referenceSnapshots.get(entityType)
                         const [serverSnapshotTime, serverSnapshot] = await this.fetchSnapshot(server, entityType)
-                        const { maxDiff, maxDiffEntity } = await this.diff(referenceServer, referenceSnapshotTime, referenceSnapshot, server, serverSnapshotTime, serverSnapshot)
+                        const snapshotTimeDiff = referenceSnapshotTime - serverSnapshotTime
+                        const { maxDiff, maxDiffPointer } = await this.diff(referenceServer, referenceSnapshotTime, referenceSnapshot, server, serverSnapshotTime, serverSnapshot)
+                        if (Math.abs(snapshotTimeDiff) > Math.abs(worstSnapshotDiff)) {
+                            worstSnapshotDiff = snapshotTimeDiff
+                        }
                         if (maxDiff > worstTimeDiff) {
                             worstTimeDiff = maxDiff
-                            worstEntityId = maxDiffEntity
+                            worstPointer = maxDiffPointer
                         }
                     }
                 } catch (error) {
                     errorMessage = `${error}`
                 }
 
-                return { worstEntityId, worstTimeDiff, server, error: errorMessage }
+                return { worstPointer, worstTimeDiff, worstSnapshotDiff, server, error: errorMessage }
             }
 
             /** Fetch the snapshot's content and timestamp */
@@ -462,7 +468,7 @@
                     throw new Error(`Failed to download snapshot. Status was: ${snapshotContentResponse.status}`)
                 }
                 const snapshotContent = await snapshotContentResponse.json()
-                return [lastIncludedDeploymentTimestamp, this.reverse(new Map(snapshotContent))]
+                return [lastIncludedDeploymentTimestamp, this.reverse(new Map(snapshotContent), server, type)]
             }
 
             /** Given a reference and compare snapshot, calculate the max differente */
@@ -485,7 +491,7 @@
                         if (compareEntity) {
                             conflictedEntitiesCompare.add(compareEntity)
                         }
-                        conflicts.push([referenceEntity, compareEntity])
+                        conflicts.push([pointer, referenceEntity, compareEntity])
                     }
                 }
 
@@ -497,10 +503,10 @@
                 const referenceEntityTimestamps = await this.checkEntityTimes(referenceServer, conflictedEntitiesReference)
                 const compareEntityTimestamps = await this.checkEntityTimes(compareServer, conflictedEntitiesCompare)
 
-                let maxDiffEntity = undefined
+                let maxDiffPointer = undefined
                 let maxDiff = 0
 
-                for (const [referenceEntity, compareEntity] of conflicts) {
+                for (const [pointer, referenceEntity, compareEntity] of conflicts) {
                     const { entityTimestamp: referenceEntityTimestamp, localTimestamp: referenceLocalTimestamp } = referenceEntityTimestamps.has(referenceEntity) ? referenceEntityTimestamps.get(referenceEntity) : ({ entityTimestamp: 0, localTimestamp: 0 })
                     const { entityTimestamp: compareEntityTimestamp, localTimestamp: compareLocalTimestamp } = compareEntityTimestamps.has(compareEntity) ? compareEntityTimestamps.get(compareEntity) : ({ entityTimestamp: 0, localTimestamp: 0 })
 
@@ -523,11 +529,11 @@
                     const diff = entityDiff + errorAge
                     if (diff > maxDiff) {
                         maxDiff = diff
-                        maxDiffEntity = compareEntity
+                        maxDiffPointer = pointer
                     }
                 }
 
-                return { maxDiffEntity, maxDiff }
+                return { maxDiffPointer, maxDiff }
             }
 
             /** Fetch all relevant timestamps for the given entities. We might need to make more than one request. */
@@ -562,12 +568,12 @@
             }
 
             // Takes a Map<EntityId, Pointer[]> and returns a Map<Pointer, EntityId>
-            reverse(snapshot) {
+            reverse(snapshot, server, type) {
                 const result = new Map()
                 for (const [ entityId, pointers ] of snapshot) {
                     for (const pointer of pointers) {
                         if (result.has(pointer)) {
-                            throw new Error(`Snapshot has pointer in more than one entity. First was '${result.get(pointer)}' and the second one is ${entityId}`)
+                            throw new Error(`Snapshot for type ${type} in server '${server}', has pointer in more than one entity. First was '${result.get(pointer)}' and the second one is ${entityId}`)
                         }
                         result.set(pointer, entityId)
                     }
