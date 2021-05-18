@@ -184,6 +184,7 @@
             return (
                 <div className="content" onClick={() => showFullStatus(props, "content", [{name: "Failed Deployments", data: props.failedDeployments}])}>
                     <b>Content - {shortHash(props.status.commitHash)}</b>
+		    <div>Catalyst Version - {props.status.catalystVersion}</div>
                     <div>History #: {props.status.historySize}</div>
                     <div>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</div>
                     <div>LastSync: {clusterInfo ? deltaTime(clusterInfo.lastSyncWithOtherServers) : "Unknown"}</div>
