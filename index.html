@@ -183,8 +183,8 @@
             }
             return (
                 <div className="content" onClick={() => showFullStatus(props, "content", [{name: "Failed Deployments", data: props.failedDeployments}])}>
-                    <b>Content - {shortHash(props.status.commitHash)}</b>
-		    <div>Catalyst Version - {props.status.catalystVersion}</div>
+                    <b>Content - {props.status.catalystVersion}</b>
+		    <div>Hash - {shortHash(props.status.commitHash)}</div>
                     <div>History #: {props.status.historySize}</div>
                     <div>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</div>
                     <div>LastSync: {clusterInfo ? deltaTime(clusterInfo.lastSyncWithOtherServers) : "Unknown"}</div>
@@ -200,7 +200,8 @@
             const minifiedLayers = props.layers.map(layer => `${layer.name.padEnd(maxLayerName)}: ${layer.usersCount}/${layer.maxUsers}`)
             return (
                 <div className="comms" onClick={() => showFullStatus(props, "comms", [{name: "Layers", data: minifiedLayers}])}>
-                    <b>Comms - {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</b>
+                    <b>Comms - {props.status.catalystVersion}</b>
+		    <div>Hash - {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
                     {props.layers.filter(layer => layer.usersCount>0).map(layer => <div>{layer.name}: {layer.usersCount}/{layer.maxUsers}</div>)}
                 </div>
             )
@@ -213,7 +214,8 @@
             const contentServerUrlStatus = contentServerUrlOk ? "OK" : `ERROR: ${currentContentServerUrl}`
             return (
                 <div className="lambdas" onClick={() => showFullStatus(props, "lambdas", [])}>
-                    <b>Lambdas - {shortHash(props.status.commitHash)}</b>
+                    <b>Lambdas - {props.status.catalystVersion}</b>
+		    <div>Hash - {shortHash(props.status.commitHash)}</div>
                     <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
                 </div>
             )
@@ -280,7 +282,7 @@
             'https://peer-ec1.decentraland.org',       // DCL - US East
             'https://peer-wc1.decentraland.org',       // DCL - US West
             'https://peer-eu1.decentraland.org',       // DCL - EU
-            'https://peer-ap1.decentraland.org',
+            'https://peer-ap1.decentraland.org',       // DCL - AP1
             'https://interconnected.online',           // Esteban
             'https://peer.decentral.games',            // Baus
             'https://peer.melonwave.com',              // Ari
@@ -291,7 +293,7 @@
         ]
 
         const nonDAOMainnetServers = [
-            'https://peer-testing.decentraland.org',
+            'https://peer-testing.decentraland.org',   // Not in DAO
         ]
 
         const zoneServers = [
