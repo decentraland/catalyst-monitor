@@ -183,7 +183,7 @@
             }
             return (
                 <div className="content" onClick={() => showFullStatus(props, "content", [{name: "Failed Deployments", data: props.failedDeployments}])}>
-                    <b>Content - {props.status.catalystVersion}</b>
+                    <b>Content v{props.status.catalystVersion}</b>
 		    <div>Hash: {shortHash(props.status.commitHash)}</div>
                     <div>History #: {props.status.historySize}</div>
                     <div>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</div>
@@ -200,7 +200,7 @@
             const minifiedLayers = props.layers.map(layer => `${layer.name.padEnd(maxLayerName)}: ${layer.usersCount}/${layer.maxUsers}`)
             return (
                 <div className="comms" onClick={() => showFullStatus(props, "comms", [{name: "Layers", data: minifiedLayers}])}>
-                    <div><b>Comms - {props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b></div>
+                    <div><b>Comms v{props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b></div>
 		    <div><b>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</b></div>
                     {props.layers.filter(layer => layer.usersCount>0).map(layer => <div>{layer.name}: {layer.usersCount}/{layer.maxUsers}</div>)}
                 </div>
@@ -214,7 +214,7 @@
             const contentServerUrlStatus = contentServerUrlOk ? "OK" : `ERROR: ${currentContentServerUrl}`
             return (
                 <div className="lambdas" onClick={() => showFullStatus(props, "lambdas", [])}>
-                    <b>Lambdas - {props.status.catalystVersion}</b>
+                    <b>Lambdas v{props.status.catalystVersion}</b>
 		    <div>Hash: {shortHash(props.status.commitHash)}</div>
                     <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
                 </div>
