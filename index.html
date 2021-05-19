@@ -202,7 +202,7 @@
                 <div className="comms" onClick={() => showFullStatus(props, "comms", [{name: "Layers", data: minifiedLayers}])}>
                     <div><b>Comms v{props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b></div>
 		    <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
-                    {props.layers.filter(layer => layer.usersCount>0).map(layer => <div>{layer.name}: {layer.usersCount}/{layer.maxUsers}</div>)}
+                    {props.layers.filter(layer => layer.usersCount>0).map(layer => <div><i>{layer.name}: {layer.usersCount}/{layer.maxUsers}</i></div>)}
                 </div>
             )
         }
