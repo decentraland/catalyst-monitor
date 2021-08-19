@@ -102,26 +102,6 @@
             padding: 2px;
             background-color: #9ec1ff;
         }
-        .health-indicator span {
-            border: 1px solid black;
-            border-radius: 5px;
-            padding: 3px;
-            display: inline-block;
-            color: white;
-            font-weight: bold;
-        }
-
-        .health-indicator.healthy span {
-            background-color: #068c0a
-        }
-
-        .health-indicator.unhealthy span {
-            background-color: #e3d000
-        }
-
-        .health-indicator.down span {
-            background-color: #8c0606
-        }
 
     </style>
 </head>
@@ -249,10 +229,6 @@
             }
         }
 
-        function HealthIndicator(props) {
-            return <div class={"health-indicator " + props.health.toLowerCase()}><span>{props.health}</span></div>
-        }
-
         function ContentServer(props) {
             const clusterInfo = props.status.synchronizationStatus
             const expectedEthNetworkOk = props.status.ethNetwork === props.expectedEthNetwork
@@ -266,7 +242,6 @@
             return (
                 <div className={"content " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "content", [{name: "Failed Deployments", data: props.failedDeployments}])}>
                     <b>Content v{props.status.catalystVersion}</b>
-                    <HealthIndicator health={props.health} />
 		    <div>Hash: {shortHash(props.status.commitHash)}</div>
                     <div>History #: {props.status.historySize}</div>
                     <div>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</div>
@@ -288,7 +263,6 @@
             return (
                 <div className={"comms " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "comms", extraInfo)}>
                     <div><b>Comms v{props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b></div>
-                    <HealthIndicator health={props.health} />
 		            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
                     {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
                     {props.layers.filter(layer => layer.usersCount>0).map(layer => <div>{layer.name}: {layer.usersCount}/{layer.maxUsers}</div>)}
@@ -304,7 +278,6 @@
             return (
                 <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
                     <b>Lambdas v{props.status.catalystVersion}</b>
-                    <HealthIndicator health={props.health} />
 		            <div>Hash: {shortHash(props.status.commitHash)}</div>
                     <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
                 </div>
