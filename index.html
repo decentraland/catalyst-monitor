@@ -28,6 +28,15 @@
         .node-wrong {
             background-color: red;
         }
+
+        .node-prd.down, .node-dev.down  {
+            background-color: red;
+        }
+
+        .node-prd.unhealthy, .node-dev.unhealthy  {
+            background-color: #f0df71;
+        }
+
         .node-title {
             font-weight: bold;
             padding: 4px;
@@ -62,6 +71,15 @@
         .comms {
             background-color:#d9c6dc;
         }
+
+        .content.down, .comms.down, .lambdas.down {
+            background-color: #ff5b4d;
+        }
+
+        .content.unhealthy, .comms.unhealthy, .lambdas.unhealthy  {
+            background-color: #faf570;
+        }
+
         .server-node-users {
             background-color:#e172f3;
             cursor: auto;
@@ -83,6 +101,26 @@
             margin: 3px;
             padding: 2px;
             background-color: #9ec1ff;
+        }
+        .health-indicator span {
+            border: 1px solid black;
+            border-radius: 5px;
+            padding: 3px;
+            display: inline-block;
+            color: white;
+            font-weight: bold;
+        }
+
+        .health-indicator.healthy span {
+            background-color: #068c0a
+        }
+
+        .health-indicator.unhealthy span {
+            background-color: #e3d000
+        }
+
+        .health-indicator.down span {
+            background-color: #8c0606
         }
 
     </style>
@@ -109,7 +147,8 @@
                     contentFailedDeployments: "?",
                     commsLayers: [],
                     usersInServer: 0,
-                    commsIslands: []
+                    commsIslands: [],
+                    health: {}
                 };
             }
             componentDidMount() {
@@ -122,6 +161,16 @@
                 this.getServerStatus('lambdas')
                 this.getServerStatus('comms')
                 this.getContentFailedDeployments()
+                this.getServerHealth()
+            }
+
+            getServerHealth() {
+                fetch(`${this.props.address}/lambdas/health`)
+                    .then(res => res.json())
+                    .then((data) => {
+                        this.setState({ health: data })
+                    })
+                    .catch(console.log)
             }
 
             getServerStatus(server) {
@@ -169,6 +218,17 @@
                     .catch(console.error)
             }
 
+            getGlobalHealth() {
+                const healths = Object.values(this.state.health)
+                if(healths.includes("Down")) return "Down"
+                if(healths.includes("Unhealthy")) return "Unhealthy"
+                return "Healthy"
+            }
+
+            getHealth(server) {
+                return this.state.health[server] ? this.state.health[server] : "Unknown"
+            }
+
             render() {
                 let title = this.props.address
                 let isHttps = false
@@ -177,15 +237,20 @@
                     isHttps = true
                 }
                 let isStatusReceived = this.state.content.version && this.state.lambdas.version && this.state.comms.version
+                let globalHealth = this.getGlobalHealth()
                 return (
-                    <div className={(this.props.expectedEthNetwork==="mainnet" ? "node-prd" : "node-dev") + (isHttps && isStatusReceived ? "" : " node-wrong" )}>
+                    <div className={(this.props.expectedEthNetwork==="mainnet" ? "node-prd" : "node-dev") + (isHttps && isStatusReceived ? "" : " node-wrong" ) + " " + globalHealth.toLowerCase() }>
                         <div className="node-title">{title}</div>
                         <div className="server-node-users"># {this.state.comms.name}: { this.state.usersInServer }</div>
-                        <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.contentFailedDeployments} expectedEthNetwork={this.props.expectedEthNetwork}/>
-                        <LambdasServer status={this.state.lambdas} address={this.props.address} />
-                        <CommsServer   status={this.state.comms}   address={this.props.address} layers={this.state.commsLayers} islands={this.state.commsIslands}/>
+                        <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.contentFailedDeployments} expectedEthNetwork={this.props.expectedEthNetwork} health={this.getHealth('content')}/>
+                        <LambdasServer status={this.state.lambdas} address={this.props.address} health={this.getHealth('lambda')}/>
+                        <CommsServer   status={this.state.comms}   address={this.props.address} layers={this.state.commsLayers} islands={this.state.commsIslands} health={this.getHealth('comms')}/>
                     </div>)
             }
+        }
+
+        function HealthIndicator(props) {
+            return <div class={"health-indicator " + props.health.toLowerCase()}><span>{props.health}</span></div>
         }
 
         function ContentServer(props) {
@@ -197,9 +262,11 @@
                 otherServers = clusterInfo.otherServers.length
                 connectedOtherServers = clusterInfo.otherServers.filter(({ connectionState }) => connectionState === 'Connected').length
             }
+
             return (
-                <div className="content" onClick={() => showFullStatus(props, "content", [{name: "Failed Deployments", data: props.failedDeployments}])}>
+                <div className={"content " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "content", [{name: "Failed Deployments", data: props.failedDeployments}])}>
                     <b>Content v{props.status.catalystVersion}</b>
+                    <HealthIndicator health={props.health} />
 		    <div>Hash: {shortHash(props.status.commitHash)}</div>
                     <div>History #: {props.status.historySize}</div>
                     <div>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</div>
@@ -219,9 +286,11 @@
             if(minifiedLayers.length > 0) extraInfo.push({name: "Layers", data: minifiedLayers})
             if(islands.length > 0) extraInfo.push({name: "Islands", data: islands})
             return (
-                <div className="comms" onClick={() => showFullStatus(props, "comms", extraInfo)}>
+                <div className={"comms " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "comms", extraInfo)}>
                     <div><b>Comms v{props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b></div>
-		    <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
+                    <HealthIndicator health={props.health} />
+		            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
+                    {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
                     {props.layers.filter(layer => layer.usersCount>0).map(layer => <div>{layer.name}: {layer.usersCount}/{layer.maxUsers}</div>)}
                 </div>
             )
@@ -233,9 +302,10 @@
             const contentServerUrlOk = (currentContentServerUrl===expectedContentServerUrl) || (currentContentServerUrl===(expectedContentServerUrl+'/'))
             const contentServerUrlStatus = contentServerUrlOk ? "OK" : `ERROR: ${currentContentServerUrl}`
             return (
-                <div className="lambdas" onClick={() => showFullStatus(props, "lambdas", [])}>
+                <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
                     <b>Lambdas v{props.status.catalystVersion}</b>
-		    <div>Hash: {shortHash(props.status.commitHash)}</div>
+                    <HealthIndicator health={props.health} />
+		            <div>Hash: {shortHash(props.status.commitHash)}</div>
                     <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
                 </div>
             )
