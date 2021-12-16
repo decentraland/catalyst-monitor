@@ -1,669 +1,668 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <title>Catalyst Nodes Monitor</title>
 
     <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: small;
-        }
-        .node-set {
-            display: flex;
-            flex-wrap: wrap;
-        }
-        /* Nodes */
-        .node-prd, .node-dev {
-            border: solid 1px;
-            border-radius: 7px;
-            margin: 3px;
-            padding: 2px;
-        }
-        .node-prd {
-            background-color: #9ec1ff;
-        }
-        .node-dev {
-            background-color: #05c3b2;
-        }
-        .node-wrong {
-            background-color: red;
-        }
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: small;
+      }
+      .node-set {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      /* Nodes */
+      .node-prd,
+      .node-dev {
+        border: solid 1px;
+        border-radius: 7px;
+        margin: 3px;
+        padding: 2px;
+      }
+      .node-prd {
+        background-color: #9ec1ff;
+      }
+      .node-dev {
+        background-color: #05c3b2;
+      }
+      .node-wrong {
+        background-color: red;
+      }
 
-        .node-prd.down, .node-dev.down  {
-            background-color: red;
-        }
+      .node-prd.down,
+      .node-dev.down {
+        background-color: red;
+      }
 
-        .node-prd.unhealthy, .node-dev.unhealthy  {
-            background-color: #f0df71;
-        }
+      .node-prd.unhealthy,
+      .node-dev.unhealthy {
+        background-color: #f0df71;
+      }
 
-        .node-title {
-            font-weight: bold;
-            padding: 4px;
-            width: 180px;
-        }
-        .total-productive-users, .total-dev-users {
-            border: solid 1px;
-            border-radius: 7px;
-            margin: 3px;
-            padding: 2px;
-            width: 110px;
-        }
-        .total-productive-users {
-            background-color: #9ec1ff;
-        }
-        .total-dev-users {
-            background-color: #05c3b2;
-        }
-        /* Servers */
-        .content, .lambdas, .comms, .server-node-users {
-            border: solid 1px;
-            border-radius: 7px;
-            margin: 3px;
-            padding: 3px;
-            cursor: pointer;
-        }
-        .content {
-            background-color:#c0e4c1;
-        }
-        .lambdas {
-            background-color:#00bcd4;
-        }
-        .comms {
-            background-color:#d9c6dc;
-        }
+      .node-title {
+        font-weight: bold;
+        padding: 4px;
+        width: 180px;
+      }
+      .total-productive-users,
+      .total-dev-users {
+        border: solid 1px;
+        border-radius: 7px;
+        margin: 3px;
+        padding: 2px;
+        width: 110px;
+      }
+      .total-productive-users {
+        background-color: #9ec1ff;
+      }
+      .total-dev-users {
+        background-color: #05c3b2;
+      }
+      /* Servers */
+      .content,
+      .lambdas,
+      .comms,
+      .server-node-users {
+        border: solid 1px;
+        border-radius: 7px;
+        margin: 3px;
+        padding: 3px;
+        cursor: pointer;
+      }
+      .content {
+        background-color: #c0e4c1;
+      }
+      .lambdas {
+        background-color: #00bcd4;
+      }
+      .comms {
+        background-color: #d9c6dc;
+      }
 
-        .content.down, .comms.down, .lambdas.down {
-            background-color: #ff5b4d;
-        }
+      .content.down,
+      .comms.down,
+      .lambdas.down {
+        background-color: #ff5b4d;
+      }
 
-        .content.unhealthy, .comms.unhealthy, .lambdas.unhealthy  {
-            background-color: #faf570;
-        }
+      .content.unhealthy,
+      .comms.unhealthy,
+      .lambdas.unhealthy {
+        background-color: #faf570;
+      }
 
-        .server-node-users {
-            background-color:#e172f3;
-            cursor: auto;
-            position: inherit;
-	        bottom: 0px;
-        }
-        /* Commits */
-        .commit-info-container {
-            border: solid 1px;
-            border-radius: 7px;
-            margin: 3px;
-            padding: 2px;
-            width: 400px;
-            background-color: #4583f1;
-        }
-        .commit-info {
-            border: solid 1px;
-            border-radius: 7px;
-            margin: 3px;
-            padding: 2px;
-            background-color: #9ec1ff;
-        }
-
+      .server-node-users {
+        background-color: #e172f3;
+        cursor: auto;
+        position: inherit;
+        bottom: 0px;
+      }
+      /* Commits */
+      .commit-info-container {
+        border: solid 1px;
+        border-radius: 7px;
+        margin: 3px;
+        padding: 2px;
+        width: 400px;
+        background-color: #4583f1;
+      }
+      .commit-info {
+        border: solid 1px;
+        border-radius: 7px;
+        margin: 3px;
+        padding: 2px;
+        background-color: #9ec1ff;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="root"></div>
 
     <script src="https://unpkg.com/react@16.12.0/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@16.12.0/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <script type="text/babel">
+      class ServerMonitor extends React.Component {
+        constructor(props) {
+          super(props)
 
-        class ServerMonitor extends React.Component {
-            constructor(props) {
-                super(props);
-
-                this.state = {
-                    content: {},
-                    lambdas: {},
-                    comms: {},
-                    contentFailedDeployments: "?",
-                    commsLayers: [],
-                    usersInServer: 0,
-                    commsIslands: [],
-                    health: {}
-                };
-            }
-            componentDidMount() {
-                this.getNodeStatus();
-                // this.serverSyncInterval = setInterval(() => {this.getNodeStatus();}, 5*1000);
-            }
-
-            getNodeStatus() {
-                this.getServerStatus('content')
-                this.getServerStatus('lambdas')
-                this.getServerStatus('comms')
-                this.getContentFailedDeployments()
-                this.getServerHealth()
-            }
-
-            getServerHealth() {
-                fetch(`${this.props.address}/lambdas/health`)
-                    .then(res => res.json())
-                    .then((data) => {
-                        this.setState({ health: data })
-                    })
-                    .catch(console.log)
-            }
-
-            getServerStatus(server) {
-                fetch(`${this.props.address}/${server}/status?includeLayers=true`)
-                    .then(res => res.json())
-                    .then((data) => {
-                        this.setState({ [server]: data })
-                        if (server=='content') {
-                            this.props.contributeCommitHash(data.commitHash)
-                        }
-                        if(server === 'comms') {
-                            this.processCommsData(data)
-                        }
-                    })
-                    .catch(console.log)
-            }
-
-            getContentFailedDeployments() {
-                fetch(`${this.props.address}/content/failedDeployments`)
-                    .then(res => res.json())
-                    .then((data) => this.setState({ contentFailedDeployments: data }))
-                    .catch(console.log)
-            }
-
-            processCommsData(commsStatus) {
-                let usersInServer
-                if(commsStatus.layers) {
-                    usersInServer = commsStatus.layers.map(layer => layer.usersCount).reduce((a,b) => a+b, 0)
-                    this.setState({ commsLayers: commsStatus.layers })
-                    delete commsStatus.layers
-                    this.setState({ comms: commsStatus })
-                } else {
-                    usersInServer = commsStatus.usersCount
-                    this.fetchIslandsData()
-                }
-
-                this.setState({ usersInServer })
-                this.props.contributeUsers(usersInServer)
-            }
-
-            fetchIslandsData() {
-                fetch(`${this.props.address}/comms/islands`)
-                    .then(res => res.json())
-                    .then(data => { if(data.ok) this.setState({commsIslands:  data.islands })})
-                    .catch(console.error)
-            }
-
-            getGlobalHealth() {
-                const healths = Object.values(this.state.health)
-                if(healths.includes("Down")) return "Down"
-                if(healths.includes("Unhealthy")) return "Unhealthy"
-                return "Healthy"
-            }
-
-            getHealth(server) {
-                return this.state.health[server] ? this.state.health[server] : "Unknown"
-            }
-
-            render() {
-                let title = this.props.address
-                let isHttps = false
-                if (this.props.address.startsWith("https://")) {
-                    title = this.props.address.substring("https://".length)
-                    isHttps = true
-                }
-                let isStatusReceived = this.state.content.version && this.state.lambdas.version && this.state.comms.version
-                let globalHealth = this.getGlobalHealth()
-                return (
-                    <div className={(this.props.expectedEthNetwork==="mainnet" ? "node-prd" : "node-dev") + (isHttps && isStatusReceived ? "" : " node-wrong" ) + " " + globalHealth.toLowerCase() }>
-                        <div className="node-title">{title}</div>
-                        <div className="server-node-users"># {this.state.comms.name}: { this.state.usersInServer }</div>
-                        <ContentServer status={this.state.content} address={this.props.address} failedDeployments={this.state.contentFailedDeployments} expectedEthNetwork={this.props.expectedEthNetwork} health={this.getHealth('content')}/>
-                        <LambdasServer status={this.state.lambdas} address={this.props.address} health={this.getHealth('lambda')}/>
-                        <CommsServer   status={this.state.comms}   address={this.props.address} layers={this.state.commsLayers} islands={this.state.commsIslands} health={this.getHealth('comms')}/>
-                    </div>)
-            }
+          this.state = {
+            content: {},
+            lambdas: {},
+            comms: {},
+            contentFailedDeployments: "?",
+            commsLayers: [],
+            usersInServer: 0,
+            commsIslands: [],
+            health: {},
+          }
+        }
+        componentDidMount() {
+          this.getNodeStatus()
+          // this.serverSyncInterval = setInterval(() => {this.getNodeStatus();}, 5*1000);
         }
 
-        function ContentServer(props) {
-            const clusterInfo = props.status.synchronizationStatus
-            const expectedEthNetworkOk = props.status.ethNetwork === props.expectedEthNetwork
-            let otherServers = 0
-            let connectedOtherServers = 0
-            if (clusterInfo) {
-                otherServers = clusterInfo.otherServers.length
-                connectedOtherServers = clusterInfo.otherServers.filter(({ connectionState }) => connectionState === 'Connected').length
-            }
+        getNodeStatus() {
+          this.getServerStatus("content")
+          this.getServerStatus("lambdas")
+          this.getServerStatus("comms")
+          this.getContentFailedDeployments()
+          this.getServerHealth()
+        }
 
-            return (
-                <div className={"content " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "content", [{name: "Failed Deployments", data: props.failedDeployments}])}>
-                    <b>Content v{props.status.catalystVersion}</b>
-		    <div>Hash: {shortHash(props.status.commitHash)}</div>
-                    <div>History #: {props.status.historySize}</div>
-                    <div>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</div>
-                    <div>LastSync: {clusterInfo ? deltaTime(clusterInfo.lastSyncWithOtherServers) : "Unknown"}</div>
-                    <div>DAO #: {`${connectedOtherServers}/${otherServers}`}</div>
-                    <div>Failed: {Array.isArray(props.failedDeployments) ? props.failedDeployments.length : props.failedDeployments}</div>
-                    <div>{!expectedEthNetworkOk ? "Eth: " + props.status.ethNetwork : ""}</div>
+        getServerHealth() {
+          fetch(`${this.props.address}/lambdas/health`)
+            .then((res) => res.json())
+            .then((data) => {
+              this.setState({ health: data })
+            })
+            .catch(console.log)
+        }
+
+        getServerStatus(server) {
+          fetch(`${this.props.address}/${server}/status?includeLayers=true`)
+            .then((res) => res.json())
+            .then((data) => {
+              this.setState({ [server]: data })
+              if (server == "content") {
+                this.props.contributeCommitHash(data.commitHash)
+              }
+              if (server === "comms") {
+                this.processCommsData(data)
+              }
+            })
+            .catch(console.log)
+        }
+
+        getContentFailedDeployments() {
+          fetch(`${this.props.address}/content/failedDeployments`)
+            .then((res) => res.json())
+            .then((data) => this.setState({ contentFailedDeployments: data }))
+            .catch(console.log)
+        }
+
+        processCommsData(commsStatus) {
+          let usersInServer
+          if (commsStatus.layers) {
+            usersInServer = commsStatus.layers.map((layer) => layer.usersCount).reduce((a, b) => a + b, 0)
+            this.setState({ commsLayers: commsStatus.layers })
+            delete commsStatus.layers
+            this.setState({ comms: commsStatus })
+          } else {
+            usersInServer = commsStatus.usersCount
+            this.fetchIslandsData()
+          }
+
+          this.setState({ usersInServer })
+          this.props.contributeUsers(usersInServer)
+        }
+
+        fetchIslandsData() {
+          fetch(`${this.props.address}/comms/islands`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.ok) this.setState({ commsIslands: data.islands })
+            })
+            .catch(console.error)
+        }
+
+        getGlobalHealth() {
+          const healths = Object.values(this.state.health)
+          if (healths.includes("Down")) return "Down"
+          if (healths.includes("Unhealthy")) return "Unhealthy"
+          return "Healthy"
+        }
+
+        getHealth(server) {
+          return this.state.health[server] ? this.state.health[server] : "Unknown"
+        }
+
+        render() {
+          let title = this.props.address
+          let isHttps = false
+          if (this.props.address.startsWith("https://")) {
+            title = this.props.address.substring("https://".length)
+            isHttps = true
+          }
+          let isStatusReceived = this.state.content.version && this.state.lambdas.version && this.state.comms.version
+          let globalHealth = this.getGlobalHealth()
+          return (
+            <div
+              className={
+                (this.props.expectedEthNetwork === "mainnet" ? "node-prd" : "node-dev") +
+                (isHttps && isStatusReceived ? "" : " node-wrong") +
+                " " +
+                globalHealth.toLowerCase()
+              }
+            >
+              <div className="node-title">{title}</div>
+              <div className="server-node-users">
+                # {this.state.comms.name}: {this.state.usersInServer}
+              </div>
+              <ContentServer
+                status={this.state.content}
+                address={this.props.address}
+                failedDeployments={this.state.contentFailedDeployments}
+                expectedEthNetwork={this.props.expectedEthNetwork}
+                health={this.getHealth("content")}
+              />
+              <LambdasServer
+                status={this.state.lambdas}
+                address={this.props.address}
+                health={this.getHealth("lambda")}
+              />
+              <CommsServer
+                status={this.state.comms}
+                address={this.props.address}
+                layers={this.state.commsLayers}
+                islands={this.state.commsIslands}
+                health={this.getHealth("comms")}
+              />
+            </div>
+          )
+        }
+      }
+
+      function ContentServer(props) {
+        const clusterInfo = props.status.synchronizationStatus
+        const expectedEthNetworkOk = props.status.ethNetwork === props.expectedEthNetwork
+        let otherServers = 0
+        let connectedOtherServers = 0
+        if (clusterInfo) {
+          otherServers = clusterInfo.otherServers.length
+          connectedOtherServers = clusterInfo.otherServers.filter(
+            ({ connectionState }) => connectionState === "Connected"
+          ).length
+        }
+
+        return (
+          <div
+            className={"content " + props.health.toLowerCase()}
+            onClick={() =>
+              showFullStatus(props, "content", [{ name: "Failed Deployments", data: props.failedDeployments }])
+            }
+          >
+            <b>Content v{props.status.catalystVersion}</b>
+            <div>Hash: {shortHash(props.status.commitHash)}</div>
+            <div>History #: {props.status.historySize}</div>
+            <div>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</div>
+            <div>LastSync: {clusterInfo ? deltaTime(clusterInfo.lastSyncWithOtherServers) : "Unknown"}</div>
+            <div>DAO #: {`${connectedOtherServers}/${otherServers}`}</div>
+            <div>
+              Failed:{" "}
+              {Array.isArray(props.failedDeployments) ? props.failedDeployments.length : props.failedDeployments}
+            </div>
+            <div>{!expectedEthNetworkOk ? "Eth: " + props.status.ethNetwork : ""}</div>
+          </div>
+        )
+      }
+
+      function CommsServer(props) {
+        const maxLayerName = Math.max(...props.layers.map((layer) => layer.name.length))
+        const minifiedLayers = props.layers.map(
+          (layer) => `${layer.name.padEnd(maxLayerName)}: ${layer.usersCount}/${layer.maxUsers}`
+        )
+        const islands = props.islands.map(
+          (island) =>
+            `${island.id} (${island.center.map((it) => Math.round(it)).join(", ")}): ${island.peers.length}/${
+              island.maxPeers
+            }`
+        )
+        const extraInfo = []
+        if (minifiedLayers.length > 0) extraInfo.push({ name: "Layers", data: minifiedLayers })
+        if (islands.length > 0) extraInfo.push({ name: "Islands", data: islands })
+        return (
+          <div
+            className={"comms " + props.health.toLowerCase()}
+            onClick={() => showFullStatus(props, "comms", extraInfo)}
+          >
+            <div>
+              <b>Comms v{props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b>
+            </div>
+            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
+            {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
+            {props.layers
+              .filter((layer) => layer.usersCount > 0)
+              .map((layer) => (
+                <div>
+                  {layer.name}: {layer.usersCount}/{layer.maxUsers}
                 </div>
-            )
+              ))}
+          </div>
+        )
+      }
+
+      function LambdasServer(props) {
+        const expectedContentServerUrl = props.address + "/content"
+        const currentContentServerUrl = props.status.contentServerUrl
+        const contentServerUrlOk =
+          currentContentServerUrl === expectedContentServerUrl ||
+          currentContentServerUrl === expectedContentServerUrl + "/"
+        const contentServerUrlStatus = contentServerUrlOk ? "OK" : `ERROR: ${currentContentServerUrl}`
+        return (
+          <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
+            <b>Lambdas v{props.status.catalystVersion}</b>
+            <div>Hash: {shortHash(props.status.commitHash)}</div>
+            <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
+          </div>
+        )
+      }
+
+      function showFullStatus(props, server, extraInfos) {
+        const statusUrl = `${props.address}/${server}/status`
+        const contentHtml =
+          "<pre style='text-align:left'>" +
+          `<div>Status: ${JSON.stringify(props.status, null, 2)}</div>` +
+          extraInfos
+            .map((extraInfo) => `<div>${extraInfo.name}: ${JSON.stringify(extraInfo.data, null, 2)}</div>`)
+            .join() +
+          "</pre>"
+        Swal.fire({
+          title: `<a href=${statusUrl}>${statusUrl}</a>`,
+          html: contentHtml,
+          width: 1000,
+        })
+      }
+
+      function shortHash(hash) {
+        if (hash && hash.length > 7) {
+          return hash.slice(0, 7)
+        }
+        return hash
+      }
+
+      function deltaTime(externalTime) {
+        if (externalTime) {
+          const deltaMillis = new Date() - externalTime
+          return millisToHumanTime(deltaMillis)
+        }
+        return "Unknown time"
+      }
+
+      function millisToHumanTime(millis) {
+        if (millis < 1000) {
+          return `${millis} millis`
+        }
+        const seconds = millis / 1000
+        if (seconds < 60) {
+          return `${seconds.toFixed(2)} secs`
+        }
+        const minutes = seconds / 60
+        if (minutes < 60) {
+          return `${minutes.toFixed(2)} mins`
+        }
+        const hours = minutes / 60
+        if (hours < 24) {
+          return `${hours.toFixed(2)} hours`
+        }
+        const days = hours / 24
+        return `${days.toFixed(2)} days`
+      }
+
+      function toISOString(externalTime) {
+        if (externalTime) {
+          return externalTime.toISOString()
+        }
+        return "Unknown time"
+      }
+
+      // const productiveServers = []
+      const productiveServers = [
+        "https://peer.decentraland.org", // DCL
+        "https://peer-ec1.decentraland.org", // DCL - US East
+        "https://peer-wc1.decentraland.org", // DCL - US West
+        "https://peer-eu1.decentraland.org", // DCL - EU
+        "https://peer-ap1.decentraland.org", // DCL - AP1
+        "https://interconnected.online", // Esteban
+        "https://peer.decentral.games", // Baus
+        "https://peer.melonwave.com", // Ari
+        "https://peer.kyllian.me", // Kyllian
+        "https://peer.uadevops.com", // SFox
+        "https://peer.dclnodes.io", // DSM
+      ]
+
+      const nonDAOMainnetServers = [
+        "https://peer-testing.decentraland.org", // Not in DAO
+        "https://peer-testing-2.decentraland.org", // Not in DAO
+        "https://peer-testing-3.decentraland.org", // Not in DAO
+      ]
+
+      const zoneServers = [
+        "https://peer.decentraland.zone", // in DAO
+        "https://peer-ue-2.decentraland.zone", // in DAO
+        "https://peer-ap1.decentraland.zone", // in DAO
+        "https://peer-uw-1.decentraland.zone", // Not in DAO
+      ]
+
+      const DEFAULT_SYNC_INTERVAL = 2 * 60 * 1000 // 2 minutes
+      const MAX_URL_LENGTH = 2048
+      const ENTITY_TYPES = ["scene", "profile"]
+
+      class Servers extends React.Component {
+        constructor(props) {
+          super(props)
+          this.state = {
+            totalProductiveUsers: 0,
+            totalDevUsers: 0,
+            totalNonDAOMainnetUsers: 0,
+            commitsHashesInfo: {},
+            syncCheck: undefined,
+          }
         }
 
-        function CommsServer(props) {
-            const maxLayerName = Math.max(...props.layers.map(layer => layer.name.length))
-            const minifiedLayers = props.layers.map(layer => `${layer.name.padEnd(maxLayerName)}: ${layer.usersCount}/${layer.maxUsers}`)
-            const islands = props.islands.map(island => `${island.id} (${island.center.map(it => Math.round(it)).join(", ")}): ${island.peers.length}/${island.maxPeers}`)
-            const extraInfo = []
-            if(minifiedLayers.length > 0) extraInfo.push({name: "Layers", data: minifiedLayers})
-            if(islands.length > 0) extraInfo.push({name: "Islands", data: islands})
+        sumProductiveUsers(usersCount) {
+          this.setState({ totalProductiveUsers: this.state.totalProductiveUsers + usersCount })
+        }
+
+        sumNonDAOMainnetUsers(usersCount) {
+          this.setState({ totalNonDAOMainnetUsers: this.state.totalNonDAOMainnetUsers + usersCount })
+        }
+
+        sumDevUsers(usersCount) {
+          this.setState({ totalDevUsers: this.state.totalDevUsers + usersCount })
+        }
+
+        async addCommitHash(commitHash) {
+          if (!this.state.commitsHashesInfo[commitHash]) {
+            this.setState({
+              commitsHashesInfo: { ...this.state.commitsHashesInfo, [commitHash]: { hash: commitHash, count: 1 } },
+            })
+            const commitDate = await this.getCommitDate(commitHash)
+            this.setState({
+              commitsHashesInfo: {
+                ...this.state.commitsHashesInfo,
+                [commitHash]: { ...this.state.commitsHashesInfo[commitHash], date: commitDate },
+              },
+            })
+          } else {
+            this.setState({
+              commitsHashesInfo: {
+                ...this.state.commitsHashesInfo,
+                [commitHash]: {
+                  ...this.state.commitsHashesInfo[commitHash],
+                  count: this.state.commitsHashesInfo[commitHash].count + 1,
+                },
+              },
+            })
+          }
+        }
+
+        async getCommitDate(commitHash) {
+          try {
+            const response = await fetch(`https://api.github.com/repos/decentraland/catalyst/commits/${commitHash}`)
+            if (response.ok) {
+              const data = await response.json()
+              return new Date(data.commit.author.date)
+            }
+          } catch (error) {
+            console.error(error)
+          }
+          return undefined
+        }
+
+        renderProductiveServers() {
+          const shouldCompareSnapshots = window.location.href.toString().indexOf("includeDevServers") >= 0
+          let compareSnapshots = ""
+          if (shouldCompareSnapshots) {
+            let result = ""
+            if (this.state.syncCheck) {
+              result =
+                this.state.syncCheck.size === 0 ? (
+                  "  Calculating..."
+                ) : (
+                  <ul>
+                    {Array.from(this.state.syncCheck.entries()).map(([server, value]) => (
+                      <li>
+                        <b>{server}</b>: {value}
+                      </li>
+                    ))}
+                  </ul>
+                )
+            }
+            compareSnapshots = (
+              <div>
+                <input
+                  type="button"
+                  title="Compare against peer.decentraland.org"
+                  value="Compare Snapshots"
+                  onClick={() => this.verifySync(productiveServers)}
+                />
+                {result}
+              </div>
+            )
+          }
+          return (
+            <div>
+              <div className="node-set">
+                {productiveServers.map((server) => {
+                  return (
+                    <ServerMonitor
+                      address={server}
+                      expectedEthNetwork="mainnet"
+                      contributeUsers={(usersCount) => this.sumProductiveUsers(usersCount)}
+                      contributeCommitHash={(commitHash) => this.addCommitHash(commitHash)}
+                    />
+                  )
+                })}
+              </div>
+              <div className="total-productive-users">Total Users: {this.state.totalProductiveUsers}</div>
+              {compareSnapshots}
+            </div>
+          )
+        }
+
+        renderExtraServers() {
+          const currentUrl = window.location.href.toString()
+          if (currentUrl.indexOf("includeDevServers") >= 0) {
             return (
-                <div className={"comms " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "comms", extraInfo)}>
-                    <div><b>Comms v{props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b></div>
-		            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
-                    {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
-                    {props.layers.filter(layer => layer.usersCount>0).map(layer => <div>{layer.name}: {layer.usersCount}/{layer.maxUsers}</div>)}
-                </div>
-            )
-        }
-
-        function LambdasServer(props) {
-            const expectedContentServerUrl = props.address + "/content"
-            const currentContentServerUrl = props.status.contentServerUrl
-            const contentServerUrlOk = (currentContentServerUrl===expectedContentServerUrl) || (currentContentServerUrl===(expectedContentServerUrl+'/'))
-            const contentServerUrlStatus = contentServerUrlOk ? "OK" : `ERROR: ${currentContentServerUrl}`
-            return (
-                <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
-                    <b>Lambdas v{props.status.catalystVersion}</b>
-		            <div>Hash: {shortHash(props.status.commitHash)}</div>
-                    <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
-                </div>
-            )
-        }
-
-        function showFullStatus(props, server, extraInfos) {
-            const statusUrl = `${props.address}/${server}/status`
-            const contentHtml =
-                "<pre style='text-align:left'>" +
-                    `<div>Status: ${JSON.stringify(props.status, null, 2)}</div>` +
-                    extraInfos.map(extraInfo => `<div>${extraInfo.name}: ${JSON.stringify(extraInfo.data, null, 2)}</div>`).join() +
-                "</pre>"
-            Swal.fire({
-                title: `<a href=${statusUrl}>${statusUrl}</a>`,
-                html: contentHtml,
-                width: 1000})
-        }
-
-        function shortHash(hash) {
-            if (hash && hash.length > 7) {
-                return hash.slice(0,7)
-            }
-            return hash
-        }
-
-        function deltaTime(externalTime) {
-            if (externalTime) {
-                const deltaMillis = new Date() - externalTime
-                return millisToHumanTime(deltaMillis)
-            }
-            return "Unknown time"
-        }
-
-        function millisToHumanTime(millis) {
-            if (millis < 1000) {
-                return `${millis} millis`
-            }
-            const seconds = millis / 1000
-            if (seconds < 60) {
-                return `${seconds.toFixed(2)} secs`
-            }
-            const minutes = seconds / 60
-            if (minutes < 60) {
-                return `${minutes.toFixed(2)} mins`
-            }
-            const hours = minutes / 60
-            if (hours < 24) {
-                return `${hours.toFixed(2)} hours`
-            }
-            const days = hours / 24
-            return `${days.toFixed(2)} days`
-        }
-
-        function toISOString(externalTime) {
-            if (externalTime) {
-                return externalTime.toISOString()
-            }
-            return "Unknown time"
-        }
-
-        // const productiveServers = []
-        const productiveServers = [
-            'https://peer.decentraland.org',           // DCL
-            'https://peer-ec1.decentraland.org',       // DCL - US East
-            'https://peer-wc1.decentraland.org',       // DCL - US West
-            'https://peer-eu1.decentraland.org',       // DCL - EU
-            'https://peer-ap1.decentraland.org',       // DCL - AP1
-            'https://interconnected.online',           // Esteban
-            'https://peer.decentral.games',            // Baus
-            'https://peer.melonwave.com',              // Ari
-            'https://peer.kyllian.me',                 // Kyllian
-            'https://peer.uadevops.com',               // SFox
-            'https://peer.dclnodes.io',                // DSM
-        ]
-
-        const nonDAOMainnetServers = [
-            'https://peer-testing.decentraland.org',     // Not in DAO
-            'https://peer-testing-2.decentraland.org',   // Not in DAO
-            'https://peer-testing-3.decentraland.org',   // Not in DAO
-        ]
-
-        const zoneServers = [
-            'https://peer.decentraland.zone',		// in DAO
-            'https://peer-ue-2.decentraland.zone',	// in DAO
-            'https://peer-ap1.decentraland.zone',	// in DAO
-            'https://peer-uw-1.decentraland.zone',	// Not in DAO
-        ]
-
-        const DEFAULT_SYNC_INTERVAL = 2 * 60 * 1000 // 2 minutes
-        const MAX_URL_LENGTH = 2048
-        const ENTITY_TYPES = ['scene', 'profile']
-
-        class Servers extends React.Component {
-            constructor(props) {
-                super(props);
-                this.state = {
-                    totalProductiveUsers: 0,
-                    totalDevUsers: 0,
-                    totalNonDAOMainnetUsers: 0,
-                    commitsHashesInfo: {},
-                    syncCheck: undefined,
-                };
-            }
-
-            sumProductiveUsers(usersCount) {
-                this.setState({ totalProductiveUsers: this.state.totalProductiveUsers + usersCount })
-            }
-
-            sumNonDAOMainnetUsers(usersCount) {
-                this.setState({ totalNonDAOMainnetUsers: this.state.totalNonDAOMainnetUsers + usersCount })
-            }
-
-            sumDevUsers(usersCount) {
-                this.setState({ totalDevUsers: this.state.totalDevUsers + usersCount })
-            }
-
-            async addCommitHash(commitHash) {
-                if (!this.state.commitsHashesInfo[commitHash]) {
-                    this.setState({commitsHashesInfo: { ... this.state.commitsHashesInfo, [commitHash]: {hash: commitHash, count: 1} }})
-                    const commitDate = await this.getCommitDate(commitHash)
-                    this.setState({commitsHashesInfo: { ... this.state.commitsHashesInfo, [commitHash]: { ... this.state.commitsHashesInfo[commitHash], date: commitDate} }})
-                } else {
-                    this.setState({commitsHashesInfo: { ... this.state.commitsHashesInfo, [commitHash]: { ... this.state.commitsHashesInfo[commitHash], count: this.state.commitsHashesInfo[commitHash].count + 1} }})
-                }
-            }
-
-            async getCommitDate(commitHash) {
-                 try {
-                    const response = await fetch(`https://api.github.com/repos/decentraland/catalyst/commits/${commitHash}`)
-                    if (response.ok) {
-                        const data = await response.json()
-                        return new Date(data.commit.author.date)
-                    }
-                } catch(error) {
-                    console.error(error)
-                }
-                return undefined
-            }
-
-            renderProductiveServers() {
-                const shouldCompareSnapshots = window.location.href.toString().indexOf("includeDevServers") >= 0
-                let compareSnapshots = ""
-                if (shouldCompareSnapshots) {
-                    let result = ""
-                    if (this.state.syncCheck) {
-                        result = this.state.syncCheck.size === 0 ?
-                            "  Calculating..." :
-                            (<ul>{ Array.from(this.state.syncCheck.entries()).map(([server, value]) => <li><b>{server}</b>: {value}</li>) }</ul>)
-                    }
-                    compareSnapshots = (
-                        <div>
-                            <input type="button" title="Compare against peer.decentraland.org" value="Compare Snapshots" onClick={() => this.verifySync(productiveServers )}/>
-                            { result }
-                        </div>
-                    )
-                }
-                return (
-                    <div>
-                        <div className="node-set">{productiveServers.map(server => {return (<ServerMonitor address={server} expectedEthNetwork="mainnet" contributeUsers={(usersCount) => this.sumProductiveUsers(usersCount)} contributeCommitHash={(commitHash => this.addCommitHash(commitHash))} />)})}</div>
-                        <div className="total-productive-users">Total Users: {this.state.totalProductiveUsers}</div>
-                        { compareSnapshots }
-                    </div>
-                );
-            }
-
-            renderExtraServers() {
-                const currentUrl = window.location.href.toString()
-                if ( currentUrl.indexOf("includeDevServers")>=0 ) {
+              <div>
+                <div className="node-set">
+                  {nonDAOMainnetServers.map((server) => {
                     return (
-                        <div>
-                            <div className="node-set">{nonDAOMainnetServers.map(server => {return (<ServerMonitor address={server} expectedEthNetwork="mainnet" contributeUsers={(usersCount) => this.sumNonDAOMainnetUsers(usersCount)} contributeCommitHash={(commitHash => this.addCommitHash(commitHash))} />)})}</div>
-                            <div className="total-productive-users">Total Users: {this.state.totalNonDAOMainnetUsers}</div>
-                            <div className="node-set">{zoneServers.map(server => {return (<ServerMonitor address={server} expectedEthNetwork="ropsten" contributeUsers={(usersCount) => this.sumDevUsers(usersCount)} contributeCommitHash={(commitHash => this.addCommitHash(commitHash))} />)})}</div>
-                            <div className="total-dev-users">Total Users: {this.state.totalDevUsers}</div>
-                        </div>
-                    );
-                } else {
-                    return (<div />)
-                }
-            }
-
-            renderCommitHashesInfo() {
-                const sortedCommits = Object.values(this.state.commitsHashesInfo)
-                sortedCommits.sort((a,b) => b.date-a.date)
-                return (
-                    <div className="commit-info-container">
-                        {sortedCommits.map(commitInfo => {return (
-                            <div className="commit-info"><b><a href={`https://github.com/decentraland/catalyst/commit/${commitInfo.hash}`} target="_blank">{shortHash(commitInfo.hash)}</a></b>: {toISOString(commitInfo.date)} ({deltaTime(commitInfo.date)}) ({commitInfo.count})</div>
-                        )})}
-                    </div>
-                );
-            }
-
-            async verifySync(servers) {
-                const referenceServer = servers[0]
-                this.setState({ syncCheck: new Map() })
-                const referenceSnapshotsEntries = await Promise.all(ENTITY_TYPES.map((entityType) => this.fetchSnapshot(referenceServer, entityType).then(snapshot => [entityType, snapshot])))
-                const referenceSnapshots = new Map(referenceSnapshotsEntries)
-
-                let results = 0
-                servers.slice(1).map(server => this.compareAgainstReference(referenceServer, referenceSnapshots, server))
-                    .map(async (promise) => {
-                        const { worstPointer, worstTimeDiff, worstSnapshotDiff, error, server } = await promise
-                        const syncResult = this.state.syncCheck
-                        const indexedServer = `${++results}/${servers.length - 1} - ${server}`
-                        const snapshotDiff = `${Math.sign(worstSnapshotDiff) < 0 ? Math.sign(worstSnapshotDiff) : "+"}${millisToHumanTime(Math.abs(worstSnapshotDiff))}`
-                        if (error) {
-                            syncResult.set(indexedServer, `An error happened: ${error}`)
-                        } else if (worstPointer) {
-                            syncResult.set(indexedServer, `Snapshot diff: ${snapshotDiff}. A difference of ${millisToHumanTime(worstTimeDiff)} was found. Check pointer ${worstPointer}`)
-                        } else {
-                            syncResult.set(indexedServer, `Snapshot diff: ${snapshotDiff}. No differences found`)
-                        }
-                        this.setState({ syncCheck: syncResult })
-                    })
-            }
-
-            async compareAgainstReference(referenceServer, referenceSnapshots, server) {
-                let worstPointer = undefined
-                let worstTimeDiff = 0
-                let errorMessage = undefined
-                let worstSnapshotDiff = 0
-
-                try {
-                    for (const entityType of ENTITY_TYPES) {
-                        const [referenceSnapshotTime, referenceSnapshot] = referenceSnapshots.get(entityType)
-                        const [serverSnapshotTime, serverSnapshot] = await this.fetchSnapshot(server, entityType)
-                        const snapshotTimeDiff = referenceSnapshotTime - serverSnapshotTime
-                        const { maxDiff, maxDiffPointer } = await this.diff(referenceServer, referenceSnapshotTime, referenceSnapshot, server, serverSnapshotTime, serverSnapshot)
-                        if (Math.abs(snapshotTimeDiff) > Math.abs(worstSnapshotDiff)) {
-                            worstSnapshotDiff = snapshotTimeDiff
-                        }
-                        if (maxDiff > worstTimeDiff) {
-                            worstTimeDiff = maxDiff
-                            worstPointer = maxDiffPointer
-                        }
-                    }
-                } catch (error) {
-                    errorMessage = `${error}`
-                }
-
-                return { worstPointer, worstTimeDiff, worstSnapshotDiff, server, error: errorMessage }
-            }
-
-            /** Fetch the snapshot's content and timestamp */
-            async fetchSnapshot(server, type) {
-                const response = await fetch(`${server}/content/snapshot/${type}`)
-                if (!response.ok) {
-                    throw new Error(`Failed to download snapshot. Status was: ${response.status}`)
-                }
-                const { hash, lastIncludedDeploymentTimestamp } = await response.json()
-                const snapshotContentResponse = await fetch(`${server}/content/contents/${hash}`)
-                if (!snapshotContentResponse.ok) {
-                    throw new Error(`Failed to download snapshot. Status was: ${snapshotContentResponse.status}`)
-                }
-                const snapshotContent = await snapshotContentResponse.json()
-                return [lastIncludedDeploymentTimestamp, this.reverse(new Map(snapshotContent), server, type)]
-            }
-
-            /** Given a reference and compare snapshot, calculate the max differente */
-            async diff(referenceServer, referenceSnapshotTime, referenceSnapshot, compareServer, compareSnapshotTime, compareSnapshot) {
-                // Combine all pointers
-                const pointers = new Set([...referenceSnapshot.keys(), ...compareSnapshot.keys()])
-                const conflicts = []
-                const conflictedEntitiesReference = new Set()
-                const conflictedEntitiesCompare = new Set()
-
-                // Find differences/conflicts on the pointers
-                for (const pointer of pointers) {
-                    const referenceEntity = referenceSnapshot.get(pointer)
-                    const compareEntity = compareSnapshot.get(pointer)
-
-                    if (referenceEntity !== compareEntity) {
-                        if (referenceEntity) {
-                            conflictedEntitiesReference.add(referenceEntity)
-                        }
-                        if (compareEntity) {
-                            conflictedEntitiesCompare.add(compareEntity)
-                        }
-                        conflicts.push([pointer, referenceEntity, compareEntity])
-                    }
-                }
-
-                if (conflicts.length > 10000) {
-                    throw new Error(`Too many differences found. Found ${conflicts.length} differences`)
-                }
-
-                // For each conflicted entity, find their timestamps. This will be needed to calculate the difference
-                const referenceEntityTimestamps = await this.checkEntityTimes(referenceServer, conflictedEntitiesReference)
-                const compareEntityTimestamps = await this.checkEntityTimes(compareServer, conflictedEntitiesCompare)
-
-                let maxDiffPointer = undefined
-                let maxDiff = 0
-
-                for (const [pointer, referenceEntity, compareEntity] of conflicts) {
-                    const { entityTimestamp: referenceEntityTimestamp, localTimestamp: referenceLocalTimestamp } = referenceEntityTimestamps.has(referenceEntity) ? referenceEntityTimestamps.get(referenceEntity) : ({ entityTimestamp: 0, localTimestamp: 0 })
-                    const { entityTimestamp: compareEntityTimestamp, localTimestamp: compareLocalTimestamp } = compareEntityTimestamps.has(compareEntity) ? compareEntityTimestamps.get(compareEntity) : ({ entityTimestamp: 0, localTimestamp: 0 })
-
-                    // Check if differences are actually valid. They might be, since consistency is only eventual
-                    if (referenceEntityTimestamp > compareEntityTimestamp && compareSnapshotTime < referenceLocalTimestamp + DEFAULT_SYNC_INTERVAL * 2) {
-                        // Valid difference
-                        continue
-                    } else if (referenceEntityTimestamp < compareEntityTimestamp && referenceSnapshotTime < compareLocalTimestamp + DEFAULT_SYNC_INTERVAL * 2) {
-                        // Valid difference
-                        continue
-                    }
-
-                    // Calculate how "old" the error is. The idea is that the longest the error goes unresolved, the bigger this value will be
-                    const errorAge = Date.now() - Math.max(referenceLocalTimestamp, compareLocalTimestamp)
-
-                    // Calculate the difference between the entities' timestamps. As long as the conflicted entities are the same, this value won't change
-                    const entityDiff = Math.abs(referenceEntityTimestamp - compareEntityTimestamp)
-
-                    // Update with the biggest diff
-                    const diff = entityDiff + errorAge
-                    if (diff > maxDiff) {
-                        maxDiff = diff
-                        maxDiffPointer = pointer
-                    }
-                }
-
-                return { maxDiffPointer, maxDiff }
-            }
-
-            /** Fetch all relevant timestamps for the given entities. We might need to make more than one request. */
-            async checkEntityTimes(server, entities) {
-                if (entities.size == 0) {
-                    return new Map()
-                }
-
-                const result = []
-                const entitiesToFetch = [...entities]
-                let url = `${server}/content/deployments?fields=auditInfo`
-                for (let i = 0; i < entitiesToFetch.length; i++) {
-                    const newQueryParam = `&entityId=${entitiesToFetch[i]}`
-                    if (url.length + newQueryParam.length > MAX_URL_LENGTH) {
-                        const response = await fetch(url)
-                        const { deployments } = await response.json()
-                        deployments
-                            .map(({ entityId, entityTimestamp, auditInfo }) => [entityId, { entityTimestamp, localTimestamp: auditInfo.localTimestamp }])
-                            .forEach(entry => result.push(entry))
-                        url = `${server}/content/deployments?fields=auditInfo`
-                    }
-                    url = url + newQueryParam
-                }
-
-                const response = await fetch(url)
-                const { deployments } = await response.json()
-                deployments
-                    .map(({ entityId, entityTimestamp, auditInfo }) => [entityId, { entityTimestamp, localTimestamp: auditInfo.localTimestamp }])
-                    .forEach(entry => result.push(entry))
-
-                return new Map(result)
-            }
-
-            // Takes a Map<EntityId, Pointer[]> and returns a Map<Pointer, EntityId>
-            reverse(snapshot, server, type) {
-                const result = new Map()
-                for (const [ entityId, pointers ] of snapshot) {
-                    for (const pointer of pointers) {
-                        if (result.has(pointer)) {
-                            throw new Error(`Snapshot for type ${type} in server '${server}', has pointer in more than one entity. First was '${result.get(pointer)}' and the second one is ${entityId}`)
-                        }
-                        result.set(pointer, entityId)
-                    }
-                }
-                return result
-            }
-
-            render() {
-                return (
-                    <div>
-                        {this.renderProductiveServers()}
-                        {this.renderExtraServers()}
-                        {this.renderCommitHashesInfo()}
-                    </div>
-                );
-            }
-
+                      <ServerMonitor
+                        address={server}
+                        expectedEthNetwork="mainnet"
+                        contributeUsers={(usersCount) => this.sumNonDAOMainnetUsers(usersCount)}
+                        contributeCommitHash={(commitHash) => this.addCommitHash(commitHash)}
+                      />
+                    )
+                  })}
+                </div>
+                <div className="total-productive-users">Total Users: {this.state.totalNonDAOMainnetUsers}</div>
+                <div className="node-set">
+                  {zoneServers.map((server) => {
+                    return (
+                      <ServerMonitor
+                        address={server}
+                        expectedEthNetwork="ropsten"
+                        contributeUsers={(usersCount) => this.sumDevUsers(usersCount)}
+                        contributeCommitHash={(commitHash) => this.addCommitHash(commitHash)}
+                      />
+                    )
+                  })}
+                </div>
+                <div className="total-dev-users">Total Users: {this.state.totalDevUsers}</div>
+              </div>
+            )
+          } else {
+            return <div />
+          }
         }
 
-        ReactDOM.render(<Servers />, document.getElementById('root'))
-    </script>
-</body>
+        renderCommitHashesInfo() {
+          const sortedCommits = Object.values(this.state.commitsHashesInfo)
+          sortedCommits.sort((a, b) => b.date - a.date)
+          return (
+            <div className="commit-info-container">
+              {sortedCommits.map((commitInfo) => {
+                return (
+                  <div className="commit-info">
+                    <b>
+                      <a href={`https://github.com/decentraland/catalyst/commit/${commitInfo.hash}`} target="_blank">
+                        {shortHash(commitInfo.hash)}
+                      </a>
+                    </b>
+                    : {toISOString(commitInfo.date)} ({deltaTime(commitInfo.date)}) ({commitInfo.count})
+                  </div>
+                )
+              })}
+            </div>
+          )
+        }
 
+        /** Fetch all relevant timestamps for the given entities. We might need to make more than one request. */
+        async checkEntityTimes(server, entities) {
+          if (entities.size == 0) {
+            return new Map()
+          }
+
+          const result = []
+          const entitiesToFetch = [...entities]
+          let url = `${server}/content/deployments?fields=auditInfo`
+          for (let i = 0; i < entitiesToFetch.length; i++) {
+            const newQueryParam = `&entityId=${entitiesToFetch[i]}`
+            if (url.length + newQueryParam.length > MAX_URL_LENGTH) {
+              const response = await fetch(url)
+              const { deployments } = await response.json()
+              deployments
+                .map(({ entityId, entityTimestamp, auditInfo }) => [
+                  entityId,
+                  { entityTimestamp, localTimestamp: auditInfo.localTimestamp },
+                ])
+                .forEach((entry) => result.push(entry))
+              url = `${server}/content/deployments?fields=auditInfo`
+            }
+            url = url + newQueryParam
+          }
+
+          const response = await fetch(url)
+          const { deployments } = await response.json()
+          deployments
+            .map(({ entityId, entityTimestamp, auditInfo }) => [
+              entityId,
+              { entityTimestamp, localTimestamp: auditInfo.localTimestamp },
+            ])
+            .forEach((entry) => result.push(entry))
+
+          return new Map(result)
+        }
+
+        render() {
+          return (
+            <div>
+              {this.renderProductiveServers()}
+              {this.renderExtraServers()}
+              {this.renderCommitHashesInfo()}
+            </div>
+          )
+        }
+      }
+
+      ReactDOM.render(<Servers />, document.getElementById("root"))
+    </script>
+  </body>
 </html>
