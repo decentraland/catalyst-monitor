@@ -287,10 +287,25 @@
             }
           >
             <b>Content v{props.status.catalystVersion}</b>
+            <br />
+            <b>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</b>
+            <br />
             <div>Hash: {shortHash(props.status.commitHash)}</div>
-            <div>History #: {props.status.historySize}</div>
-            <div>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</div>
-            <div>LastSync: {clusterInfo ? deltaTime(clusterInfo.lastSyncWithOtherServers) : "Unknown"}</div>
+            {props.status.snapshot != null ? (
+              <div>
+                Snapshot:
+                <div style={{ paddingLeft: "10px" }}>
+                  Last Generated: {deltaTime(props.status.snapshot.lastUpdatedTime)} ago
+                </div>
+                {Object.keys(props.status.snapshot.entities).map((entity) => (
+                  <div style={{ paddingLeft: "10px" }}>
+                    {entity[0].toUpperCase() + entity.slice(1)}: {props.status.snapshot.entities[entity]}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div />
+            )}
             <div>DAO #: {`${connectedOtherServers}/${otherServers}`}</div>
             <div>
               Failed:{" "}
