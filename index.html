@@ -228,7 +228,7 @@
             title = this.props.address.substring("https://".length)
             isHttps = true
           }
-          let isStatusReceived = this.state.content.version && this.state.lambdas.version && this.state.comms.version
+          let isStatusReceived = this.state.content.catalystVersion && this.state.lambdas.version && this.state.comms.version
           let globalHealth = this.getGlobalHealth()
           return (
             <div
