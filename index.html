@@ -271,13 +271,6 @@
         const clusterInfo = props.status.synchronizationStatus
         const expectedEthNetworkOk = props.status.ethNetwork === props.expectedEthNetwork
         let otherServers = 0
-        let connectedOtherServers = 0
-        if (clusterInfo) {
-          otherServers = clusterInfo.otherServers.length
-          connectedOtherServers = clusterInfo.otherServers.filter(
-            ({ connectionState }) => connectionState === "Connected"
-          ).length
-        }
 
         return (
           <div
