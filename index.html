@@ -512,36 +512,6 @@
         }
 
         renderProductiveServers() {
-          const shouldCompareSnapshots = window.location.href.toString().indexOf("includeDevServers") >= 0
-          let compareSnapshots = ""
-          if (shouldCompareSnapshots) {
-            let result = ""
-            if (this.state.syncCheck) {
-              result =
-                this.state.syncCheck.size === 0 ? (
-                  "  Calculating..."
-                ) : (
-                  <ul>
-                    {Array.from(this.state.syncCheck.entries()).map(([server, value]) => (
-                      <li>
-                        <b>{server}</b>: {value}
-                      </li>
-                    ))}
-                  </ul>
-                )
-            }
-            compareSnapshots = (
-              <div>
-                <input
-                  type="button"
-                  title="Compare against peer.decentraland.org"
-                  value="Compare Snapshots"
-                  onClick={() => this.verifySync(productiveServers)}
-                />
-                {result}
-              </div>
-            )
-          }
           return (
             <div>
               <div className="node-set">
@@ -557,7 +527,6 @@
                 })}
               </div>
               <div className="total-productive-users">Total Users: {this.state.totalProductiveUsers}</div>
-              {compareSnapshots}
             </div>
           )
         }
