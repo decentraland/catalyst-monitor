@@ -179,7 +179,7 @@
         }
 
         getContentFailedDeployments() {
-          fetch(`${this.props.address}/content/failedDeployments`)
+          fetch(`${this.props.address}/content/failed-deployments`)
             .then((res) => res.json())
             .then((data) => this.setState({ contentFailedDeployments: data }))
             .catch(console.log)
