@@ -63,6 +63,7 @@
       .content,
       .lambdas,
       .comms,
+      .bff,
       .server-node-users {
         border: solid 1px;
         border-radius: 7px;
@@ -79,17 +80,26 @@
       .comms {
         background-color: #d9c6dc;
       }
+      .bff {
+        background-color: #e6dee9;
+      }
 
       .content.down,
       .comms.down,
-      .lambdas.down {
+      .lambdas.down,
+      .bff.down {
         background-color: #ff5b4d;
       }
 
       .content.unhealthy,
       .comms.unhealthy,
-      .lambdas.unhealthy {
+      .lambdas.unhealthy,
+      .bff.unhealthy {
         background-color: #faf570;
+      }
+
+      .bff.unknown {
+        display: none;
       }
 
       .server-node-users {
@@ -134,6 +144,8 @@
             content: {},
             lambdas: {},
             comms: {},
+            bff: {},
+            bffHealth: 'Unknown',
             contentFailedDeployments: "?",
             commsLayers: [],
             usersInServer: 0,
@@ -150,6 +162,7 @@
           this.getServerStatus("content")
           this.getServerStatus("lambdas")
           this.getServerStatus("comms")
+          this.getServerStatus("bff")
           this.getContentFailedDeployments()
           this.getServerHealth()
         }
@@ -158,16 +171,32 @@
           fetch(`${this.props.address}/lambdas/health`)
             .then((res) => res.json())
             .then((data) => {
-              this.setState({ health: data })
+              this.setState({ health: {
+                ...this.state.health,
+                ...data,
+              } })
             })
             .catch(console.log)
         }
 
         getServerStatus(server) {
           fetch(`${this.props.address}/${server}/status?includeLayers=true`)
+            .then((res) => {
+              if (server === "bff") {
+                const bffHealth = res.status === 200 ? 'Healthy' : 'Down'
+                this.setState({ health: {
+                  ...this.state.health,
+                  bff: bffHealth
+                } })
+              }
+              return res
+            })
             .then((res) => res.json())
             .then((data) => {
-              this.setState({ [server]: data })
+              if (server !== 'bff') {
+                this.setState({ [server]: data })
+              }
+
               if (server == "content") {
                 this.props.contributeCommitHash(data.commitHash)
               }
@@ -261,6 +290,11 @@
                 layers={this.state.commsLayers}
                 islands={this.state.commsIslands}
                 health={this.getHealth("comms")}
+              />
+              <BffServer
+                address={this.props.address}
+                status={this.state.bff}
+                health={this.getHealth("bff")}
               />
             </div>
           )
@@ -359,6 +393,14 @@
         )
       }
 
+      function BffServer(props) {
+        return (
+          <div className={"bff " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "bff", [])}>
+            <b>BFF</b>
+          </div>
+        )
+      }
+      
       function showFullStatus(props, server, extraInfos) {
         const statusUrl = `${props.address}/${server}/status`
         const contentHtml =
