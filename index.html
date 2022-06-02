@@ -193,10 +193,7 @@
             })
             .then((res) => res.json())
             .then((data) => {
-              if (server !== 'bff') {
-                this.setState({ [server]: data })
-              }
-
+              this.setState({ [server]: data })
               if (server == "content") {
                 this.props.contributeCommitHash(data.commitHash)
               }
@@ -397,6 +394,7 @@
         return (
           <div className={"bff " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "bff", [])}>
             <b>BFF</b>
+            <div>Hash: {shortHash(props.status.commitHash)}</div>
           </div>
         )
       }
