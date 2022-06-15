@@ -64,6 +64,7 @@
       .lambdas,
       .comms,
       .bff,
+      .archipelago,
       .server-node-users {
         border: solid 1px;
         border-radius: 7px;
@@ -83,24 +84,30 @@
       .bff {
         background-color: #e6dee9;
       }
+      .archipelago {
+        background-color: #f7ecfb;
+      }
 
       .content.down,
       .comms.down,
       .lambdas.down,
-      .bff.down {
+      .bff.down,
+      .archipelago.down {
         background-color: #ff5b4d;
       }
 
       .content.unhealthy,
       .comms.unhealthy,
       .lambdas.unhealthy,
-      .bff.unhealthy {
+      .bff.unhealthy,
+      .archipelago.unhealthy {
         background-color: #faf570;
       }
 
       .comms.unknown,
       .lambdas.unknown,
-      .bff.unknown {
+      .bff.unknown,
+      .archipelago.unknown {
         display: none;
       }
 
@@ -148,6 +155,8 @@
             comms: {},
             bff: {},
             bffHealth: 'Unknown',
+            archipelago: {},
+            archipelagoHealth: 'Unknown',
             contentFailedDeployments: "?",
             commsLayers: [],
             usersInServer: 0,
@@ -165,8 +174,10 @@
           this.getServerStatus("lambdas")
           this.getServerStatus("comms")
           this.getServerStatus("bff")
+          this.getServerStatus("archipelago")
           this.getContentFailedDeployments()
           this.getServerHealth()
+          this.getClusterStatus()
         }
 
         getServerHealth() {
@@ -179,6 +190,21 @@
               } })
             })
             .catch(console.log)
+        }
+
+        getClusterStatus() {
+          fetch(`${this.props.address}/bff/cluster-status`)
+            .then((res) => res.json())
+            .then((data) => {
+              const archipelagoHealth = data.archipelago ? 'Healthy' : 'Down'
+              this.setState({ health: {
+                ...this.state.health,
+                archipelago: archipelagoHealth
+              } })
+              if (data.archipelago) {
+                this.setState({ archipelago: data.archipelago })
+              }
+            })
         }
 
         getServerStatus(server) {
@@ -195,10 +221,7 @@
             })
             .then((res) => res.json())
             .then((data) => {
-              if (server !== 'bff') {
-                this.setState({ [server]: data })
-              }
-
+              this.setState({ [server]: data })
               if (server == "content") {
                 this.props.contributeCommitHash(data.commitHash)
               }
@@ -299,6 +322,11 @@
                 address={this.props.address}
                 status={this.state.bff}
                 health={this.getHealth("bff")}
+              />
+              <ArchipelagoServer
+                address={this.props.address}
+                status={this.state.archipelago}
+                health={this.getHealth("archipelago")}
               />
             </div>
           )
@@ -401,12 +429,22 @@
         return (
           <div className={"bff " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "bff", [])}>
             <b>BFF</b>
+            <div>Hash: {shortHash(props.status.commitHash)}</div>
+          </div>
+        )
+      }
+
+      function ArchipelagoServer(props) {
+        return (
+          <div className={"archipelago " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "archipelago", [])}>
+            <b>Archipelago</b>
+            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
           </div>
         )
       }
       
       function showFullStatus(props, server, extraInfos) {
-        const statusUrl = `${props.address}/${server}/status`
+        const statusUrl = server !== 'archipelago' ? `${props.address}/${server}/status` : `${props.address}/bff/cluster-status`
         const contentHtml =
           "<pre style='text-align:left'>" +
           `<div>Status: ${JSON.stringify(props.status, null, 2)}</div>` +
