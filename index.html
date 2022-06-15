@@ -104,6 +104,8 @@
         background-color: #faf570;
       }
 
+      .comms.unknown,
+      .lambdas.unknown,
       .bff.unknown,
       .archipelago.unknown {
         display: none;
@@ -281,6 +283,8 @@
             isHttps = true
           }
           let isStatusReceived = this.state.content.catalystVersion && this.state.lambdas.version && this.state.comms.version
+          if (title === "peer-historical.decentraland.org") // Historical catalyst is content-only
+            isStatusReceived = this.state.content.catalystVersion
           let globalHealth = this.getGlobalHealth()
           return (
             <div
@@ -516,6 +520,7 @@
         "https://peer-testing.decentraland.org", // Not in DAO
         "https://peer-testing-2.decentraland.org", // Not in DAO
         "https://peer-testing-3.decentraland.org", // Not in DAO
+        "https://peer-historical.decentraland.org", // Not in DAO
       ]
 
       const zoneServers = [
