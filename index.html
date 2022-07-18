@@ -168,15 +168,42 @@
           // this.serverSyncInterval = setInterval(() => {this.getNodeStatus();}, 5*1000);
         }
 
-        getNodeStatus() {
+        async getNodeStatus() {
           this.getServerStatus("content")
           this.getServerStatus("lambdas")
-          this.getServerStatus("comms")
           this.getServerStatus("bff")
-          this.getServerStatus("archipelago")
           this.getContentFailedDeployments()
-          this.getServerHealth()
-          this.getClusterStatus()
+
+          try {
+            const res = await fetch(`${this.props.address}/about`)
+            const data = await res.json()
+
+            const commsHealth = {
+              comms: 'Unknown',
+              archipelago: 'Unknown',
+            }
+            const commsV2 = data && data.configurations && data.configurations.commsProtocol === 'v2'
+            if (commsV2) {
+              this.getServerStatus("comms")
+              commsHealth.comms = data.comms.healthy ? 'Healthy' : 'Down'
+            } else {
+              commsHealth.archipelago = data.comms.healthy ? 'Healthy' : 'Down'
+              this.setState({ archipelago: data.comms })
+            }
+
+            const bffHealth = res.status === 200 ? 'Healthy' : 'Down'
+            this.setState({ health: {
+              ...this.state.health,
+              ...commsHealth,
+              bff: bffHealth,
+              content: data.content.healthy ? 'Healthy' : 'Down',
+              lambda: data.lambdas.healthy ? 'Healthy' : 'Down',
+            }})
+          } catch (err) {
+            console.log(err)
+            this.getServerStatus("comms")
+            this.getServerHealth()
+          }
         }
 
         getServerHealth() {
@@ -189,21 +216,6 @@
               } })
             })
             .catch(console.log)
-        }
-
-        getClusterStatus() {
-          fetch(`${this.props.address}/bff/cluster-status`)
-            .then((res) => res.json())
-            .then((data) => {
-              const archipelagoHealth = data.archipelago ? 'Healthy' : 'Down'
-              this.setState({ health: {
-                ...this.state.health,
-                archipelago: archipelagoHealth
-              } })
-              if (data.archipelago) {
-                this.setState({ archipelago: data.archipelago })
-              }
-            })
         }
 
         getServerStatus(server) {
@@ -317,15 +329,15 @@
                 islands={this.state.commsIslands}
                 health={this.getHealth("comms")}
               />
-              <BffServer
-                address={this.props.address}
-                status={this.state.bff}
-                health={this.getHealth("bff")}
-              />
               <ArchipelagoServer
                 address={this.props.address}
                 status={this.state.archipelago}
                 health={this.getHealth("archipelago")}
+              />
+              <BffServer
+                address={this.props.address}
+                status={this.state.bff}
+                health={this.getHealth("bff")}
               />
             </div>
           )
@@ -393,7 +405,7 @@
             onClick={() => showFullStatus(props, "comms", extraInfo)}
           >
             <div>
-              <b>Comms v{props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b>
+              <b>Comms v2: v{props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b>
             </div>
             <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
             {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
@@ -435,8 +447,8 @@
 
       function ArchipelagoServer(props) {
         return (
-          <div className={"archipelago " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "archipelago", [])}>
-            <b>Archipelago</b>
+          <div className={"archipelago " + props.health.toLowerCase()}>
+            <b>Archipelago (comms v3)</b>
             <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
           </div>
         )
