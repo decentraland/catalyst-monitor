@@ -13,6 +13,9 @@
     <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+    <script src="servers.js"></script>
+    
     <script type="text/babel">
       class ServerMonitor extends React.Component {
         constructor(props) {
@@ -394,36 +397,7 @@
         return "Unknown time"
       }
 
-      // const productiveServers = []
-      const productiveServers = [
-        "https://peer-ec1.decentraland.org", // DCL - US East 1
-        "https://peer-ec2.decentraland.org", // DCL - US East 2
-        "https://peer-wc1.decentraland.org", // DCL - US West
-        "https://peer-eu1.decentraland.org", // DCL - EU
-        "https://peer-ap1.decentraland.org", // DCL - AP1
-        "https://interconnected.online", // Esteban
-        "https://peer.decentral.io", // Baus
-        "https://peer.melonwave.com", // Ari
-        "https://peer.kyllian.me", // Kyllian
-        "https://peer.uadevops.com", // SFox
-        "https://peer.dclnodes.io", // DSM
-      ]
 
-      const nonDAOMainnetServers = [
-        "https://peer-testing.decentraland.org", // Not in DAO
-        "https://peer-testing-2.decentraland.org", // Not in DAO
-        "https://peer-testing-3.decentraland.org", // Not in DAO
-        "https://peer-historical.decentraland.org", // Not in DAO
-      ]
-
-      const zoneServers = [
-        "https://peer.decentraland.zone", // in DAO
-        "https://peer-ue-2.decentraland.zone", // in DAO
-      ]
-
-      const DEFAULT_SYNC_INTERVAL = 2 * 60 * 1000 // 2 minutes
-      const MAX_URL_LENGTH = 2048
-      const ENTITY_TYPES = ["scene", "profile"]
 
       class Servers extends React.Component {
         constructor(props) {
@@ -487,11 +461,11 @@
           return undefined
         }
 
-        renderProductiveServers() {
+        renderDAOMainnetServers() {
           return (
             <div>
               <div className="node-set">
-                {productiveServers.map((server) => {
+                {DAOMainnetServers.map((server) => {
                   return (
                     <ServerMonitor
                       address={server}
@@ -577,7 +551,7 @@
           let url = `${server}/content/deployments?fields=auditInfo`
           for (let i = 0; i < entitiesToFetch.length; i++) {
             const newQueryParam = `&entityId=${entitiesToFetch[i]}`
-            if (url.length + newQueryParam.length > MAX_URL_LENGTH) {
+            if (url.length + newQueryParam.length > 2048) {
               const response = await fetch(url)
               const { deployments } = await response.json()
               deployments
@@ -606,7 +580,7 @@
         render() {
           return (
             <div>
-              {this.renderProductiveServers()}
+              {this.renderDAOMainnetServers()}
               {this.renderExtraServers()}
               {this.renderCommitHashesInfo()}
             </div>
