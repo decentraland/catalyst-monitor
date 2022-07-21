@@ -80,7 +80,7 @@
         }
 
         getServerHealth() {
-          fetch(`${this.props.address}/about`)
+          fetch(`${this.props.address}/lambdas/health`)
             .then((res) => res.json())
             .then((data) => {
               this.setState({ health: {
@@ -88,19 +88,7 @@
                 ...data,
               } })
             })
-            .catch(error => {
-              console.log('/about endpoint is not already implemented, using lambdas/health instead')
-
-              fetch(`${this.props.address}/lambdas/health`)
-                .then((res) => res.json())
-                .then((data) => {
-                  this.setState({ health: {
-                    ...this.state.health,
-                    ...data,
-                  } })
-                })
-                .catch(console.log)
-            })
+            .catch(console.log)
         }
 
         getServerStatus(server) {
