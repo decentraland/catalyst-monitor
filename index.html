@@ -2,137 +2,7 @@
 <html>
   <head>
     <title>Catalyst Nodes Monitor</title>
-    <style>
-      body {
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: small;
-      }
-      .node-set {
-        display: flex;
-        flex-wrap: wrap;
-      }
-      /* Nodes */
-      .node-prd,
-      .node-dev {
-        border: solid 1px;
-        border-radius: 7px;
-        margin: 3px;
-        padding: 2px;
-      }
-      .node-prd {
-        background-color: #9ec1ff;
-      }
-      .node-dev {
-        background-color: #05c3b2;
-      }
-      .node-wrong {
-        background-color: red;
-      }
-
-      .node-prd.down,
-      .node-dev.down {
-        background-color: red;
-      }
-
-      .node-prd.unhealthy,
-      .node-dev.unhealthy {
-        background-color: #f0df71;
-      }
-
-      .node-title {
-        font-weight: bold;
-        padding: 4px;
-        width: 180px;
-      }
-      .total-productive-users,
-      .total-dev-users {
-        border: solid 1px;
-        border-radius: 7px;
-        margin: 3px;
-        padding: 2px;
-        width: 110px;
-      }
-      .total-productive-users {
-        background-color: #9ec1ff;
-      }
-      .total-dev-users {
-        background-color: #05c3b2;
-      }
-      /* Servers */
-      .content,
-      .lambdas,
-      .comms,
-      .bff,
-      .archipelago,
-      .server-node-users {
-        border: solid 1px;
-        border-radius: 7px;
-        margin: 3px;
-        padding: 3px;
-        cursor: pointer;
-      }
-      .content {
-        background-color: #c0e4c1;
-      }
-      .lambdas {
-        background-color: #00bcd4;
-      }
-      .comms {
-        background-color: #d9c6dc;
-      }
-      .bff {
-        background-color: #e6dee9;
-      }
-      .archipelago {
-        background-color: #f7ecfb;
-      }
-
-      .content.down,
-      .comms.down,
-      .lambdas.down,
-      .bff.down,
-      .archipelago.down {
-        background-color: #ff5b4d;
-      }
-
-      .content.unhealthy,
-      .comms.unhealthy,
-      .lambdas.unhealthy,
-      .bff.unhealthy,
-      .archipelago.unhealthy {
-        background-color: #faf570;
-      }
-
-      .comms.unknown,
-      .lambdas.unknown,
-      .bff.unknown,
-      .archipelago.unknown {
-        display: none;
-      }
-
-      .server-node-users {
-        background-color: #e172f3;
-        cursor: auto;
-        position: inherit;
-        bottom: 0px;
-      }
-      /* Commits */
-      .commit-info-container {
-        border: solid 1px;
-        border-radius: 7px;
-        margin: 3px;
-        padding: 2px;
-        width: 400px;
-        background-color: #4583f1;
-      }
-      .commit-info {
-        border: solid 1px;
-        border-radius: 7px;
-        margin: 3px;
-        padding: 2px;
-        background-color: #9ec1ff;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css">
   </head>
 
   <body>
@@ -207,7 +77,7 @@
         }
 
         getServerHealth() {
-          fetch(`${this.props.address}/lambdas/health`)
+          fetch(`${this.props.address}/about`)
             .then((res) => res.json())
             .then((data) => {
               this.setState({ health: {
@@ -215,7 +85,19 @@
                 ...data,
               } })
             })
-            .catch(console.log)
+            .catch(error => {
+              console.log('/about endpoint is not already implemented, using lambdas/health instead')
+
+              fetch(`${this.props.address}/lambdas/health`)
+                .then((res) => res.json())
+                .then((data) => {
+                  this.setState({ health: {
+                    ...this.state.health,
+                    ...data,
+                  } })
+                })
+                .catch(console.log)
+            })
         }
 
         getServerStatus(server) {
