@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 
     <script src="servers.js"></script>
-    
+
     <script type="text/babel">
       class ServerMonitor extends React.Component {
         constructor(props) {
@@ -38,7 +38,6 @@
         }
         componentDidMount() {
           this.getNodeStatus()
-          // this.serverSyncInterval = setInterval(() => {this.getNodeStatus();}, 5*1000);
         }
 
         async getNodeStatus() {
