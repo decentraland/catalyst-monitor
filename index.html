@@ -18,6 +18,7 @@
     <script src="time.js"></script>
 
     <script type="text/babel">
+      
       class ServerMonitor extends React.Component {
         constructor(props) {
           super(props)
@@ -104,9 +105,6 @@
             .then((res) => res.json())
             .then((data) => {
               this.setState({ [server]: data })
-              if (server == "content") {
-                this.props.contributeCommitHash(data.commitHash)
-              }
               if (server === "comms") {
                 this.processCommsData(data)
               }
@@ -231,7 +229,7 @@
             <br />
             <b>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</b>
             <br />
-            <div>Hash: {renderCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
+            <div>Hash: {getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
             {props.status.snapshot != null ? (
               <div>
                 Snapshot:
@@ -273,9 +271,9 @@
      
         let commsHashInfo = '?'
         if (props.status.env ) {
-          commsHashInfo = renderCommitHashInfo(props.status.env.commitHash, 'lighthouse') 
+          commsHashInfo = getCommitHashInfo(props.status.env.commitHash, 'lighthouse')
         } else {
-          commsHashInfo = renderCommitHashInfo(props.status.commitHash, 'archipelago-service')
+          commsHashInfo = getCommitHashInfo(props.status.commitHash, 'lighthouse')
         }
         return (
           <div
@@ -308,7 +306,7 @@
         return (
           <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
             <b>Lambdas v{props.status.catalystVersion}</b>
-            <div>Hash: {renderCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
+            <div>Hash: {getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
             <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
           </div>
         )
@@ -318,7 +316,7 @@
         return (
           <div className={"bff " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "bff", [])}>
             <b>BFF</b>
-            <div>Hash: {renderCommitHashInfo(props.status.commitHash, 'explorer-bff')}</div>
+            <div>Hash: {getCommitHashInfo(props.status.commitHash, 'explorer-bff')}</div>
           </div>
         )
       }
@@ -327,7 +325,7 @@
         return (
           <div className={"archipelago " + props.health.toLowerCase()}>
             <b>Archipelago (comms v3)</b>
-            <div>Hash: {renderCommitHashInfo(props.status.commitHash, 'archipelago-service')}</div>
+            <div>Hash: {getCommitHashInfo(props.status.commitHash, 'archipelago-service')}</div>
           </div>
         )
       }
@@ -371,6 +369,7 @@
           this.setState({ totalDevUsers: this.state.totalDevUsers + usersCount })
         }
 
+
         renderDAOMainnetServers() {
           return (
             <div>
@@ -381,7 +380,6 @@
                       address={server}
                       expectedEthNetwork="mainnet"
                       contributeUsers={(usersCount) => this.sumProductiveUsers(usersCount)}
-                      contributeCommitHash={(commitHash) => this.addCommitHash(commitHash)}
                     />
                   )
                 })}
@@ -403,7 +401,6 @@
                         address={server}
                         expectedEthNetwork="mainnet"
                         contributeUsers={(usersCount) => this.sumNonDAOMainnetUsers(usersCount)}
-                        contributeCommitHash={(commitHash) => this.addCommitHash(commitHash)}
                       />
                     )
                   })}
@@ -416,7 +413,6 @@
                         address={server}
                         expectedEthNetwork="ropsten"
                         contributeUsers={(usersCount) => this.sumDevUsers(usersCount)}
-                        contributeCommitHash={(commitHash) => this.addCommitHash(commitHash)}
                       />
                     )
                   })}
