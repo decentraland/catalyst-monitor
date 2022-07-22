@@ -67,7 +67,7 @@
             this.setState({ health: {
               ...this.state.health,
               ...commsHealth,
-              bff: bffHealth,
+              bff: data.bff.healthy ? 'Healthy' : 'Down',
               content: data.content.healthy ? 'Healthy' : 'Down',
               lambda: data.lambdas.healthy ? 'Healthy' : 'Down',
             }})
