@@ -33,6 +33,22 @@ function millisToHumanTime(millis) {
   return `${days.toFixed(2)} days`
 }
 
+function renderCommitHashInfo(commitHash, repositoryName) {
+  if (!commitHash) { 
+    return '?'
+  }
+  fetch(`https://api.github.com/repos/decentraland/${repositoryName}/commits/${commitHash}`)
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.ok) {
+        const date =  new Date(data.commit.author.date)
+        return `${shortHash(commitHash)} (${deltaTime(date)} ago)`
+      }
+    })
+    .catch(console.error)
+  return `${shortHash(commitHash)}`
+}
+
 function toISOString(externalTime) {
   if (externalTime) {
     return externalTime.toISOString()

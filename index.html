@@ -231,7 +231,7 @@
             <br />
             <b>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</b>
             <br />
-            <div>Hash: {shortHash(props.status.commitHash)}</div>
+            <div>Hash: {renderCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
             {props.status.snapshot != null ? (
               <div>
                 Snapshot:
@@ -270,6 +270,13 @@
         const extraInfo = []
         if (minifiedLayers.length > 0) extraInfo.push({ name: "Layers", data: minifiedLayers })
         if (islands.length > 0) extraInfo.push({ name: "Islands", data: islands })
+     
+        let commsHashInfo = '?'
+        if (props.status.env ) {
+          commsHashInfo = renderCommitHashInfo(props.status.env.commitHash, 'lighthouse') 
+        } else {
+          commsHashInfo = renderCommitHashInfo(props.status.commitHash, 'archipelago-service')
+        }
         return (
           <div
             className={"comms " + props.health.toLowerCase()}
@@ -278,7 +285,7 @@
             <div>
               <b>Comms v2</b>
             </div>
-            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : shortHash(props.status.commitHash)}</div>
+            <div>Hash: {commsHashInfo}</div>
             {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
             {props.layers
               .filter((layer) => layer.usersCount > 0)
@@ -301,7 +308,7 @@
         return (
           <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
             <b>Lambdas v{props.status.catalystVersion}</b>
-            <div>Hash: {shortHash(props.status.commitHash)}</div>
+            <div>Hash: {renderCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
             <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
           </div>
         )
@@ -311,7 +318,7 @@
         return (
           <div className={"bff " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "bff", [])}>
             <b>BFF</b>
-            <div>Hash: {shortHash(props.status.commitHash)}</div>
+            <div>Hash: {renderCommitHashInfo(props.status.commitHash, 'explorer-bff')}</div>
           </div>
         )
       }
@@ -320,7 +327,7 @@
         return (
           <div className={"archipelago " + props.health.toLowerCase()}>
             <b>Archipelago (comms v3)</b>
-            <div>Hash: {shortHash(props.status.commitHash)}</div>
+            <div>Hash: {renderCommitHashInfo(props.status.commitHash, 'archipelago-service')}</div>
           </div>
         )
       }
@@ -348,7 +355,6 @@
             totalProductiveUsers: 0,
             totalDevUsers: 0,
             totalNonDAOMainnetUsers: 0,
-            commitsHashesInfo: {},
             syncCheck: undefined,
           }
         }
@@ -363,44 +369,6 @@
 
         sumDevUsers(usersCount) {
           this.setState({ totalDevUsers: this.state.totalDevUsers + usersCount })
-        }
-
-        async addCommitHash(commitHash) {
-          if (!this.state.commitsHashesInfo[commitHash]) {
-            this.setState({
-              commitsHashesInfo: { ...this.state.commitsHashesInfo, [commitHash]: { hash: commitHash, count: 1 } },
-            })
-            const commitDate = await this.getCommitDate(commitHash)
-            this.setState({
-              commitsHashesInfo: {
-                ...this.state.commitsHashesInfo,
-                [commitHash]: { ...this.state.commitsHashesInfo[commitHash], date: commitDate },
-              },
-            })
-          } else {
-            this.setState({
-              commitsHashesInfo: {
-                ...this.state.commitsHashesInfo,
-                [commitHash]: {
-                  ...this.state.commitsHashesInfo[commitHash],
-                  count: this.state.commitsHashesInfo[commitHash].count + 1,
-                },
-              },
-            })
-          }
-        }
-
-        async getCommitDate(commitHash) {
-          try {
-            const response = await fetch(`https://api.github.com/repos/decentraland/catalyst/commits/${commitHash}`)
-            if (response.ok) {
-              const data = await response.json()
-              return new Date(data.commit.author.date)
-            }
-          } catch (error) {
-            console.error(error)
-          }
-          return undefined
         }
 
         renderDAOMainnetServers() {
@@ -461,70 +429,11 @@
           }
         }
 
-        renderCommitHashesInfo() {
-          const sortedCommits = Object.values(this.state.commitsHashesInfo)
-          sortedCommits.sort((a, b) => b.date - a.date)
-          return (
-            <div className="commit-info-container">
-              {sortedCommits.map((commitInfo) => {
-                return (
-                  <div className="commit-info">
-                    <b>
-                      <a href={`https://github.com/decentraland/catalyst/commit/${commitInfo.hash}`} target="_blank">
-                        {shortHash(commitInfo.hash)}
-                      </a>
-                    </b>
-                    : {toISOString(commitInfo.date)} ({deltaTime(commitInfo.date)}) ({commitInfo.count})
-                  </div>
-                )
-              })}
-            </div>
-          )
-        }
-
-        /** Fetch all relevant timestamps for the given entities. We might need to make more than one request. */
-        async checkEntityTimes(server, entities) {
-          if (entities.size == 0) {
-            return new Map()
-          }
-
-          const result = []
-          const entitiesToFetch = [...entities]
-          let url = `${server}/content/deployments?fields=auditInfo`
-          for (let i = 0; i < entitiesToFetch.length; i++) {
-            const newQueryParam = `&entityId=${entitiesToFetch[i]}`
-            if (url.length + newQueryParam.length > 2048) {
-              const response = await fetch(url)
-              const { deployments } = await response.json()
-              deployments
-                .map(({ entityId, entityTimestamp, auditInfo }) => [
-                  entityId,
-                  { entityTimestamp, localTimestamp: auditInfo.localTimestamp },
-                ])
-                .forEach((entry) => result.push(entry))
-              url = `${server}/content/deployments?fields=auditInfo`
-            }
-            url = url + newQueryParam
-          }
-
-          const response = await fetch(url)
-          const { deployments } = await response.json()
-          deployments
-            .map(({ entityId, entityTimestamp, auditInfo }) => [
-              entityId,
-              { entityTimestamp, localTimestamp: auditInfo.localTimestamp },
-            ])
-            .forEach((entry) => result.push(entry))
-
-          return new Map(result)
-        }
-
         render() {
           return (
             <div>
               {this.renderDAOMainnetServers()}
               {this.renderExtraServers()}
-              {this.renderCommitHashesInfo()}
             </div>
           )
         }

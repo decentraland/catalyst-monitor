@@ -112,19 +112,3 @@ body {
   position: inherit;
   bottom: 0px;
 }
-/* Commits */
-.commit-info-container {
-  border: solid 1px;
-  border-radius: 7px;
-  margin: 3px;
-  padding: 2px;
-  width: 400px;
-  background-color: #4583f1;
-}
-.commit-info {
-  border: solid 1px;
-  border-radius: 7px;
-  margin: 3px;
-  padding: 2px;
-  background-color: #9ec1ff;
-}
