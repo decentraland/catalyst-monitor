@@ -269,12 +269,7 @@
         if (minifiedLayers.length > 0) extraInfo.push({ name: "Layers", data: minifiedLayers })
         if (islands.length > 0) extraInfo.push({ name: "Islands", data: islands })
      
-        let commsHashInfo = '?'
-        if (props.status.env ) {
-          commsHashInfo = getCommitHashInfo(props.status.env.commitHash, 'lighthouse')
-        } else {
-          commsHashInfo = getCommitHashInfo(props.status.commitHash, 'lighthouse')
-        }
+        let commsHash = props.status.env ? props.status.env.commitHash : props.status.commitHash
         return (
           <div
             className={"comms " + props.health.toLowerCase()}
@@ -283,7 +278,7 @@
             <div>
               <b>Comms v2</b>
             </div>
-            <div>Hash: {commsHashInfo}</div>
+            <div>Hash: {getCommitHashInfo(commsHash, 'lighthouse')}</div>
             {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
             {props.layers
               .filter((layer) => layer.usersCount > 0)

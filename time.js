@@ -38,25 +38,25 @@ let allCommitHashInfo = {}
 
 function getCommitHashInfo(commitHash, repositoryName) {
   if (!commitHash || !repositoryName) return shortHash(commitHash)
-  const key = `${repositoryName}-${commitHash}`
+  const key = keyFrom(commitHash, repositoryName)
   if (!allCommitHashInfo[key]) {
     renderCommitHashInfo(commitHash, repositoryName)
   }
   return allCommitHashInfo[key]
 }
 
-
 function renderCommitHashInfo(commitHash, repositoryName) {
-  if (!commitHash) { 
-    return '?'
-  }
   fetch(`https://api.github.com/repos/decentraland/${repositoryName}/commits/${commitHash}`)
   .then((res) => res.json())
   .then((data) => {
     const date =  new Date(data.commit.author.date)
-    allCommitHashInfo[`${repositoryName}-${commitHash}`] = `${shortHash(commitHash)} (${deltaTime(date)} ago)`
+    allCommitHashInfo[keyFrom(commitHash, repositoryName)] = `${shortHash(commitHash)} (${deltaTime(date)} ago)`
   })
   .catch(console.error)
+}
+
+function keyFrom(commitHash, repositoryName) {
+  return `${repositoryName}-${commitHash}`
 }
 
 function toISOString(externalTime) {
