@@ -1,10 +1,12 @@
 :root {
-  --cyan: #9ec1ff;
-  --light-green: #c0e4c1;
-  --green: #05c3b2;
-  --red: red;
-  --yellow: #f0df71;
-  --violet: #e172f3;
+  --light-grey: #f3f2f5;
+  --grey: #b5b0c0;
+  --light-green: #dcf0dc;
+  --red: #ff2d55;
+  --yellow: #ffbc5b;
+  --violet: #691fa9;
+  --light-violet: #d367d8;
+  --black: black;
 }
 
 body {
@@ -24,30 +26,26 @@ body {
   padding: 2px;
 }
 .node-prd {
-  background-color: var(--cyan);
+  background-color: var(--grey);
 }
 .node-dev {
-  background-color: var(--green);
+  background-color: var(--light-grey);
 }
 .node-wrong {
   background-color: var(--red);
 }
 
-.node-prd.down,
-.node-dev.down {
-  background-color: var(--red);
-}
-
-.node-prd.unhealthy,
-.node-dev.unhealthy {
-  background-color: var(--yellow);
+.node-wrong .node-title {
+  color: var(--black);
 }
 
 .node-title {
   font-weight: bold;
   padding: 4px;
   width: 180px;
+  color: var(--violet);
 }
+
 .total-productive-users,
 .total-dev-users {
   border: solid 1px;
@@ -55,13 +53,9 @@ body {
   margin: 3px;
   padding: 2px;
   width: 110px;
+  background-color: var(--light-grey);
 }
-.total-productive-users {
-  background-color: var(--cyan);
-}
-.total-dev-users {
-  background-color: var(--green);
-}
+
 /* Servers */
 .content,
 .lambdas,
@@ -74,36 +68,14 @@ body {
   margin: 3px;
   padding: 3px;
   cursor: pointer;
-}
-.content {
-  background-color: var(--light-green);
-}
-.lambdas {
-  background-color: var(--light-green);
-}
-.comms {
-  background-color: var(--light-green);
-}
-.bff {
-  background-color: var(--light-green);
-}
-.archipelago {
   background-color: var(--light-green);
 }
 
-.content.down,
-.comms.down,
-.lambdas.down,
-.bff.down,
-.archipelago.down {
+.down {
   background-color: var(--red);
 }
 
-.content.unhealthy,
-.comms.unhealthy,
-.lambdas.unhealthy,
-.bff.unhealthy,
-.archipelago.unhealthy {
+.unhealthy {
   background-color: var(--yellow);
 }
 
@@ -115,7 +87,8 @@ body {
 }
 
 .server-node-users {
-  background-color: var(--violet);
+  background-color: var(--cyan);
+  border: none;
   cursor: auto;
   position: inherit;
   bottom: 0px;
