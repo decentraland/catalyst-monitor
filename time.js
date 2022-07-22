@@ -33,6 +33,7 @@ function millisToHumanTime(millis) {
   return `${days.toFixed(2)} days`
 }
 
+// Cache the metadata from commits to avoid reaching the GH rate limit
 let allCommitHashInfo = {}
 
 
