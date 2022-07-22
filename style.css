@@ -1,12 +1,9 @@
 :root {
-  --light-grey: #f3f2f5;
-  --grey: #b5b0c0;
   --light-green: #dcf0dc;
+  --green: #b7e7b7;
   --red: #ff2d55;
   --yellow: #ffbc5b;
-  --violet: #691fa9;
   --light-violet: #d367d8;
-  --black: black;
 }
 
 body {
@@ -26,24 +23,19 @@ body {
   padding: 2px;
 }
 .node-prd {
-  background-color: var(--grey);
+  background-color: var(--green);
 }
 .node-dev {
-  background-color: var(--light-grey);
+  background-color: var(--green);
 }
 .node-wrong {
   background-color: var(--red);
-}
-
-.node-wrong .node-title {
-  color: var(--black);
 }
 
 .node-title {
   font-weight: bold;
   padding: 4px;
   width: 180px;
-  color: var(--violet);
 }
 
 .total-productive-users,
@@ -53,7 +45,7 @@ body {
   margin: 3px;
   padding: 2px;
   width: 110px;
-  background-color: var(--light-grey);
+  background-color: var(--green);
 }
 
 /* Servers */
@@ -87,7 +79,7 @@ body {
 }
 
 .server-node-users {
-  background-color: var(--cyan);
+  background-color: inherit;
   border: none;
   cursor: auto;
   position: inherit;
