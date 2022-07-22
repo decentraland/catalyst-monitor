@@ -51,20 +51,18 @@
             const res = await fetch(`${this.props.address}/about`)
             const data = await res.json()
 
-            const commsHealth = {
-              comms: 'Unknown',
-              archipelago: 'Unknown',
-            }
-            const commsV2 = data && data.configurations && data.configurations.commsProtocol === 'v2'
-            if (commsV2) {
-              this.getServerStatus("comms")
+            const commsHealth = {}
+
+            if (data && data.comms.protocol === 'v2') {
               commsHealth.comms = data.comms.healthy ? 'Healthy' : 'Down'
+              this.setState({ comms: data.comms })
             } else {
               commsHealth.archipelago = data.comms.healthy ? 'Healthy' : 'Down'
               this.setState({ archipelago: data.comms })
             }
 
             const bffHealth = res.status === 200 ? 'Healthy' : 'Down'
+            this.setState({ bff: data.bff })
             this.setState({ health: {
               ...this.state.health,
               ...commsHealth,
@@ -278,9 +276,9 @@
             onClick={() => showFullStatus(props, "comms", extraInfo)}
           >
             <div>
-              <b>Comms v2: v{props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b>
+              <b>Comms v2</b>
             </div>
-            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
+            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : shortHash(props.status.commitHash)}</div>
             {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
             {props.layers
               .filter((layer) => layer.usersCount > 0)
@@ -322,7 +320,7 @@
         return (
           <div className={"archipelago " + props.health.toLowerCase()}>
             <b>Archipelago (comms v3)</b>
-            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
+            <div>Hash: {shortHash(props.status.commitHash)}</div>
           </div>
         )
       }
