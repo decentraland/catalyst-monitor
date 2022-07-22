@@ -2,137 +2,7 @@
 <html>
   <head>
     <title>Catalyst Nodes Monitor</title>
-    <style>
-      body {
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: small;
-      }
-      .node-set {
-        display: flex;
-        flex-wrap: wrap;
-      }
-      /* Nodes */
-      .node-prd,
-      .node-dev {
-        border: solid 1px;
-        border-radius: 7px;
-        margin: 3px;
-        padding: 2px;
-      }
-      .node-prd {
-        background-color: #9ec1ff;
-      }
-      .node-dev {
-        background-color: #05c3b2;
-      }
-      .node-wrong {
-        background-color: red;
-      }
-
-      .node-prd.down,
-      .node-dev.down {
-        background-color: red;
-      }
-
-      .node-prd.unhealthy,
-      .node-dev.unhealthy {
-        background-color: #f0df71;
-      }
-
-      .node-title {
-        font-weight: bold;
-        padding: 4px;
-        width: 180px;
-      }
-      .total-productive-users,
-      .total-dev-users {
-        border: solid 1px;
-        border-radius: 7px;
-        margin: 3px;
-        padding: 2px;
-        width: 110px;
-      }
-      .total-productive-users {
-        background-color: #9ec1ff;
-      }
-      .total-dev-users {
-        background-color: #05c3b2;
-      }
-      /* Servers */
-      .content,
-      .lambdas,
-      .comms,
-      .bff,
-      .archipelago,
-      .server-node-users {
-        border: solid 1px;
-        border-radius: 7px;
-        margin: 3px;
-        padding: 3px;
-        cursor: pointer;
-      }
-      .content {
-        background-color: #c0e4c1;
-      }
-      .lambdas {
-        background-color: #00bcd4;
-      }
-      .comms {
-        background-color: #d9c6dc;
-      }
-      .bff {
-        background-color: #e6dee9;
-      }
-      .archipelago {
-        background-color: #f7ecfb;
-      }
-
-      .content.down,
-      .comms.down,
-      .lambdas.down,
-      .bff.down,
-      .archipelago.down {
-        background-color: #ff5b4d;
-      }
-
-      .content.unhealthy,
-      .comms.unhealthy,
-      .lambdas.unhealthy,
-      .bff.unhealthy,
-      .archipelago.unhealthy {
-        background-color: #faf570;
-      }
-
-      .comms.unknown,
-      .lambdas.unknown,
-      .bff.unknown,
-      .archipelago.unknown {
-        display: none;
-      }
-
-      .server-node-users {
-        background-color: #e172f3;
-        cursor: auto;
-        position: inherit;
-        bottom: 0px;
-      }
-      /* Commits */
-      .commit-info-container {
-        border: solid 1px;
-        border-radius: 7px;
-        margin: 3px;
-        padding: 2px;
-        width: 400px;
-        background-color: #4583f1;
-      }
-      .commit-info {
-        border: solid 1px;
-        border-radius: 7px;
-        margin: 3px;
-        padding: 2px;
-        background-color: #9ec1ff;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css">
   </head>
 
   <body>
@@ -143,6 +13,10 @@
     <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+    <script src="servers.js"></script>
+    <script src="time.js"></script>
+
     <script type="text/babel">
       class ServerMonitor extends React.Component {
         constructor(props) {
@@ -165,7 +39,6 @@
         }
         componentDidMount() {
           this.getNodeStatus()
-          // this.serverSyncInterval = setInterval(() => {this.getNodeStatus();}, 5*1000);
         }
 
         async getNodeStatus() {
@@ -178,20 +51,18 @@
             const res = await fetch(`${this.props.address}/about`)
             const data = await res.json()
 
-            const commsHealth = {
-              comms: 'Unknown',
-              archipelago: 'Unknown',
-            }
-            const commsV2 = data && data.configurations && data.configurations.commsProtocol === 'v2'
-            if (commsV2) {
-              this.getServerStatus("comms")
+            const commsHealth = {}
+
+            if (data && data.comms.protocol === 'v2') {
               commsHealth.comms = data.comms.healthy ? 'Healthy' : 'Down'
+              this.setState({ comms: data.comms })
             } else {
               commsHealth.archipelago = data.comms.healthy ? 'Healthy' : 'Down'
               this.setState({ archipelago: data.comms })
             }
 
             const bffHealth = res.status === 200 ? 'Healthy' : 'Down'
+            this.setState({ bff: data.bff })
             this.setState({ health: {
               ...this.state.health,
               ...commsHealth,
@@ -405,9 +276,9 @@
             onClick={() => showFullStatus(props, "comms", extraInfo)}
           >
             <div>
-              <b>Comms v2: v{props.status.env ? shortHash(props.status.env.catalystVersion) : "?"}</b>
+              <b>Comms v2</b>
             </div>
-            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
+            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : shortHash(props.status.commitHash)}</div>
             {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
             {props.layers
               .filter((layer) => layer.usersCount > 0)
@@ -449,7 +320,7 @@
         return (
           <div className={"archipelago " + props.health.toLowerCase()}>
             <b>Archipelago (comms v3)</b>
-            <div>Hash: {props.status.env ? shortHash(props.status.env.commitHash) : "?"}</div>
+            <div>Hash: {shortHash(props.status.commitHash)}</div>
           </div>
         )
       }
@@ -469,79 +340,6 @@
           width: 1000,
         })
       }
-
-      function shortHash(hash) {
-        if (hash && hash.length > 7) {
-          return hash.slice(0, 7)
-        }
-        return hash
-      }
-
-      function deltaTime(externalTime) {
-        if (externalTime) {
-          const deltaMillis = new Date() - externalTime
-          return millisToHumanTime(deltaMillis)
-        }
-        return "Unknown time"
-      }
-
-      function millisToHumanTime(millis) {
-        if (millis < 1000) {
-          return `${millis} millis`
-        }
-        const seconds = millis / 1000
-        if (seconds < 60) {
-          return `${seconds.toFixed(2)} secs`
-        }
-        const minutes = seconds / 60
-        if (minutes < 60) {
-          return `${minutes.toFixed(2)} mins`
-        }
-        const hours = minutes / 60
-        if (hours < 24) {
-          return `${hours.toFixed(2)} hours`
-        }
-        const days = hours / 24
-        return `${days.toFixed(2)} days`
-      }
-
-      function toISOString(externalTime) {
-        if (externalTime) {
-          return externalTime.toISOString()
-        }
-        return "Unknown time"
-      }
-
-      // const productiveServers = []
-      const productiveServers = [
-        "https://peer-ec1.decentraland.org", // DCL - US East 1
-        "https://peer-ec2.decentraland.org", // DCL - US East 2
-        "https://peer-wc1.decentraland.org", // DCL - US West
-        "https://peer-eu1.decentraland.org", // DCL - EU
-        "https://peer-ap1.decentraland.org", // DCL - AP1
-        "https://interconnected.online", // Esteban
-        "https://peer.decentral.io", // Baus
-        "https://peer.melonwave.com", // Ari
-        "https://peer.kyllian.me", // Kyllian
-        "https://peer.uadevops.com", // SFox
-        "https://peer.dclnodes.io", // DSM
-      ]
-
-      const nonDAOMainnetServers = [
-        "https://peer-testing.decentraland.org", // Not in DAO
-        "https://peer-testing-2.decentraland.org", // Not in DAO
-        "https://peer-testing-3.decentraland.org", // Not in DAO
-        "https://peer-historical.decentraland.org", // Not in DAO
-      ]
-
-      const zoneServers = [
-        "https://peer.decentraland.zone", // in DAO
-        "https://peer-ue-2.decentraland.zone", // in DAO
-      ]
-
-      const DEFAULT_SYNC_INTERVAL = 2 * 60 * 1000 // 2 minutes
-      const MAX_URL_LENGTH = 2048
-      const ENTITY_TYPES = ["scene", "profile"]
 
       class Servers extends React.Component {
         constructor(props) {
@@ -605,11 +403,11 @@
           return undefined
         }
 
-        renderProductiveServers() {
+        renderDAOMainnetServers() {
           return (
             <div>
               <div className="node-set">
-                {productiveServers.map((server) => {
+                {DAOMainnetServers.map((server) => {
                   return (
                     <ServerMonitor
                       address={server}
@@ -695,7 +493,7 @@
           let url = `${server}/content/deployments?fields=auditInfo`
           for (let i = 0; i < entitiesToFetch.length; i++) {
             const newQueryParam = `&entityId=${entitiesToFetch[i]}`
-            if (url.length + newQueryParam.length > MAX_URL_LENGTH) {
+            if (url.length + newQueryParam.length > 2048) {
               const response = await fetch(url)
               const { deployments } = await response.json()
               deployments
@@ -724,7 +522,7 @@
         render() {
           return (
             <div>
-              {this.renderProductiveServers()}
+              {this.renderDAOMainnetServers()}
               {this.renderExtraServers()}
               {this.renderCommitHashesInfo()}
             </div>
