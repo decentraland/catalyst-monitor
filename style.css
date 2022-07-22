@@ -1,3 +1,11 @@
+:root {
+  --cyan: #9ec1ff;
+  --light-green: #c0e4c1;
+  --green: #05c3b2;
+  --red: red;
+  --yellow: #f0df71;
+  --violet: #e172f3;
+}
 
 body {
   font-family: Arial, Helvetica, sans-serif;
@@ -16,23 +24,23 @@ body {
   padding: 2px;
 }
 .node-prd {
-  background-color: #9ec1ff;
+  background-color: var(--cyan);
 }
 .node-dev {
-  background-color: #05c3b2;
+  background-color: var(--green);
 }
 .node-wrong {
-  background-color: red;
+  background-color: var(--red);
 }
 
 .node-prd.down,
 .node-dev.down {
-  background-color: red;
+  background-color: var(--red);
 }
 
 .node-prd.unhealthy,
 .node-dev.unhealthy {
-  background-color: #f0df71;
+  background-color: var(--yellow);
 }
 
 .node-title {
@@ -49,10 +57,10 @@ body {
   width: 110px;
 }
 .total-productive-users {
-  background-color: #9ec1ff;
+  background-color: var(--cyan);
 }
 .total-dev-users {
-  background-color: #05c3b2;
+  background-color: var(--green);
 }
 /* Servers */
 .content,
@@ -68,19 +76,19 @@ body {
   cursor: pointer;
 }
 .content {
-  background-color: #c0e4c1;
+  background-color: var(--light-green);
 }
 .lambdas {
-  background-color: #00bcd4;
+  background-color: var(--light-green);
 }
 .comms {
-  background-color: #d9c6dc;
+  background-color: var(--light-green);
 }
 .bff {
-  background-color: #e6dee9;
+  background-color: var(--light-green);
 }
 .archipelago {
-  background-color: #f7ecfb;
+  background-color: var(--light-green);
 }
 
 .content.down,
@@ -88,7 +96,7 @@ body {
 .lambdas.down,
 .bff.down,
 .archipelago.down {
-  background-color: #ff5b4d;
+  background-color: var(--red);
 }
 
 .content.unhealthy,
@@ -96,7 +104,7 @@ body {
 .lambdas.unhealthy,
 .bff.unhealthy,
 .archipelago.unhealthy {
-  background-color: #faf570;
+  background-color: var(--yellow);
 }
 
 .comms.unknown,
@@ -107,7 +115,7 @@ body {
 }
 
 .server-node-users {
-  background-color: #e172f3;
+  background-color: var(--violet);
   cursor: auto;
   position: inherit;
   bottom: 0px;
