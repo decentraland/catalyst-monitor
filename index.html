@@ -18,7 +18,7 @@
     <script src="time.js"></script>
 
     <script type="text/babel">
-      
+
       class ServerMonitor extends React.Component {
         constructor(props) {
           super(props)
@@ -268,7 +268,7 @@
         const extraInfo = []
         if (minifiedLayers.length > 0) extraInfo.push({ name: "Layers", data: minifiedLayers })
         if (islands.length > 0) extraInfo.push({ name: "Islands", data: islands })
-     
+
         let commsHash = props.status.env ? props.status.env.commitHash : props.status.commitHash
         return (
           <div
@@ -324,7 +324,7 @@
           </div>
         )
       }
-      
+
       function showFullStatus(props, server, extraInfos) {
         const statusUrl = server !== 'archipelago' ? `${props.address}/${server}/status` : `${props.address}/bff/cluster-status`
         const contentHtml =
@@ -406,7 +406,7 @@
                     return (
                       <ServerMonitor
                         address={server}
-                        expectedEthNetwork="ropsten"
+                        expectedEthNetwork="goerli"
                         contributeUsers={(usersCount) => this.sumDevUsers(usersCount)}
                       />
                     )
