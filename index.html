@@ -24,6 +24,7 @@
           super(props)
 
           this.state = {
+            configurations: {},
             content: {},
             lambdas: {},
             comms: {},
@@ -61,6 +62,7 @@
               commsHealth.archipelago = data.comms.healthy ? 'Healthy' : 'Down'
               this.setState({ archipelago: data.comms })
             }
+              this.setState({ configurations: data.configurations })
 
             const bffHealth = res.status === 200 ? 'Healthy' : 'Down'
             this.setState({ bff: data.bff })
@@ -177,7 +179,7 @@
             >
               <div className="node-title">{title}</div>
               <div className="server-node-users">
-                # {this.state.comms.name}: {this.state.usersInServer}
+                # {this.state.comms.name || this.state.configurations.realmName}: {this.state.usersInServer}
               </div>
               <ContentServer
                 status={this.state.content}
