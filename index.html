@@ -62,7 +62,7 @@
               commsHealth.archipelago = data.comms.healthy ? 'Healthy' : 'Down'
               this.setState({ archipelago: data.comms })
             }
-              this.setState({ configurations: data.configurations })
+            this.setState({ configurations: data.configurations })
 
             const bffHealth = res.status === 200 ? 'Healthy' : 'Down'
             this.setState({ bff: data.bff })
