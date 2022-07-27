@@ -24,6 +24,7 @@
           super(props)
 
           this.state = {
+            configurations: {},
             content: {},
             lambdas: {},
             comms: {},
@@ -57,11 +58,14 @@
             if (data && data.comms.protocol === 'v2') {
               commsHealth.comms = data.comms.healthy ? 'Healthy' : 'Down'
               this.setState({ comms: data.comms })
+              this.getServerStatus("comms")
             } else {
               commsHealth.archipelago = data.comms.healthy ? 'Healthy' : 'Down'
               this.setState({ archipelago: data.comms })
+              this.setState({ usersInServer: data.bff.usersCount })
+              this.props.contributeUsers(data.bff.usersCount)
             }
-
+            this.setState({ configurations: data.configurations })
             const bffHealth = res.status === 200 ? 'Healthy' : 'Down'
             this.setState({ bff: data.bff })
             this.setState({ health: {
@@ -177,7 +181,7 @@
             >
               <div className="node-title">{title}</div>
               <div className="server-node-users">
-                # {this.state.comms.name}: {this.state.usersInServer}
+                # {this.state.comms.name || this.state.configurations.realmName}: {this.state.usersInServer}
               </div>
               <ContentServer
                 status={this.state.content}
@@ -268,8 +272,7 @@
         const extraInfo = []
         if (minifiedLayers.length > 0) extraInfo.push({ name: "Layers", data: minifiedLayers })
         if (islands.length > 0) extraInfo.push({ name: "Islands", data: islands })
-
-        let commsHash = props.status.env ? props.status.env.commitHash : props.status.commitHash
+        let commsHash = props.status.commitHash || (props.status.env && props.status.env.commitHash)
         return (
           <div
             className={"comms " + props.health.toLowerCase()}
