@@ -271,7 +271,7 @@
         if (minifiedLayers.length > 0) extraInfo.push({ name: "Layers", data: minifiedLayers })
         if (islands.length > 0) extraInfo.push({ name: "Islands", data: islands })
      
-        let commsHash = props.status.env ? props.status.env.commitHash : props.status.commitHash
+        let commsHash = props.status.commitHash || (props.status.env && props.status.env.commitHash)
         return (
           <div
             className={"comms " + props.health.toLowerCase()}
