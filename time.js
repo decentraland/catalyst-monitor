@@ -38,7 +38,12 @@ let allCommitHashInfo = {}
 
 
 function getCommitHashInfo(commitHash, repositoryName) {
-  if (!commitHash || !repositoryName) return shortHash(commitHash)
+  if (!commitHash) {
+    return commitHash
+  }
+  if (!repositoryName) {
+    return shortHash(commitHash)
+  }
   const key = keyFrom(commitHash, repositoryName)
   if (!allCommitHashInfo[key]) {
     renderCommitHashInfo(commitHash, repositoryName)
@@ -50,6 +55,11 @@ function renderCommitHashInfo(commitHash, repositoryName) {
   fetch(`https://api.github.com/repos/decentraland/${repositoryName}/commits/${commitHash}`)
   .then((res) => res.json())
   .then((data) => {
+    if (!data || !data.commit) {
+      allCommitHashInfo[keyFrom(commitHash, repositoryName)] = shortHash(commitHash)
+      return
+    }
+    
     const date =  new Date(data.commit.author.date)
     allCommitHashInfo[keyFrom(commitHash, repositoryName)] = `${shortHash(commitHash)} (${deltaTime(date)} ago)`
   })
