@@ -58,12 +58,14 @@
             if (data && data.comms.protocol === 'v2') {
               commsHealth.comms = data.comms.healthy ? 'Healthy' : 'Down'
               this.setState({ comms: data.comms })
+              this.getServerStatus("comms")
             } else {
               commsHealth.archipelago = data.comms.healthy ? 'Healthy' : 'Down'
               this.setState({ archipelago: data.comms })
+              this.setState({ usersInServer: data.bff.usersCount })
+              this.props.contributeUsers(data.bff.usersCount)
             }
             this.setState({ configurations: data.configurations })
-
             const bffHealth = res.status === 200 ? 'Healthy' : 'Down'
             this.setState({ bff: data.bff })
             this.setState({ health: {
