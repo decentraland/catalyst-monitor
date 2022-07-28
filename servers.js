@@ -23,4 +23,5 @@ const nonDAOMainnetServers = [
 const zoneServers = [
   "https://peer.decentraland.zone",
   "https://peer-ue-2.decentraland.zone",
+  "https://peer-ap1.decentraland.zone",
 ]
