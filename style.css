@@ -54,7 +54,7 @@ body {
   border-radius: 7px;
   margin: 3px;
   padding: 2px;
-  width: 110px;
+  width: 150px;
 }
 .total-productive-users {
   background-color: var(--cyan);

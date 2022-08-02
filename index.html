@@ -18,7 +18,7 @@
     <script src="time.js"></script>
 
     <script type="text/babel">
-      
+
       class ServerMonitor extends React.Component {
         constructor(props) {
           super(props)
@@ -166,7 +166,7 @@
             title = this.props.address.substring("https://".length)
             isHttps = true
           }
-          let isStatusReceived = this.state.content.catalystVersion && this.state.lambdas.version 
+          let isStatusReceived = this.state.content.catalystVersion && this.state.lambdas.version
           if (title === "peer-historical.decentraland.org") // Historical catalyst is content-only
             isStatusReceived = this.state.content.catalystVersion
           let globalHealth = this.getGlobalHealth()
@@ -272,7 +272,6 @@
         const extraInfo = []
         if (minifiedLayers.length > 0) extraInfo.push({ name: "Layers", data: minifiedLayers })
         if (islands.length > 0) extraInfo.push({ name: "Islands", data: islands })
-     
         let commsHash = props.status.commitHash || (props.status.env && props.status.env.commitHash)
         return (
           <div
@@ -328,7 +327,7 @@
           </div>
         )
       }
-      
+
       function showFullStatus(props, server, extraInfos) {
         const statusUrl = server !== 'archipelago' ? `${props.address}/${server}/status` : `${props.address}/bff/cluster-status`
         const contentHtml =
@@ -351,23 +350,27 @@
           this.state = {
             totalProductiveUsers: 0,
             totalDevUsers: 0,
+            totalGoerliDevUsers: 0,
             totalNonDAOMainnetUsers: 0,
             syncCheck: undefined,
           }
         }
 
-        sumProductiveUsers(usersCount) {
+        sumProductiveUsers(usersCount = 0) {
           this.setState({ totalProductiveUsers: this.state.totalProductiveUsers + usersCount })
         }
 
-        sumNonDAOMainnetUsers(usersCount) {
+        sumNonDAOMainnetUsers(usersCount = 0) {
           this.setState({ totalNonDAOMainnetUsers: this.state.totalNonDAOMainnetUsers + usersCount })
         }
 
-        sumDevUsers(usersCount) {
+        sumDevUsers(usersCount = 0) {
           this.setState({ totalDevUsers: this.state.totalDevUsers + usersCount })
         }
 
+        sumGoerliDevUsers(usersCount = 0) {
+          this.setState({ totalGoerliDevUsers: this.state.totalGoerliDevUsers + usersCount })
+        }
 
         renderDAOMainnetServers() {
           return (
@@ -405,18 +408,32 @@
                   })}
                 </div>
                 <div className="total-productive-users">Total Users: {this.state.totalNonDAOMainnetUsers}</div>
+
                 <div className="node-set">
-                  {zoneServers.map((server) => {
+                  {zoneRopstenServers.map((server) => {
                     return (
-                      <ServerMonitor
-                        address={server}
-                        expectedEthNetwork="ropsten"
-                        contributeUsers={(usersCount) => this.sumDevUsers(usersCount)}
-                      />
+                            <ServerMonitor
+                                    address={server}
+                                    expectedEthNetwork="ropsten"
+                                    contributeUsers={(usersCount) => this.sumDevUsers(usersCount)}
+                            />
                     )
                   })}
                 </div>
-                <div className="total-dev-users">Total Users: {this.state.totalDevUsers}</div>
+                <div className="total-dev-users">Total Users (Ropsten): {this.state.totalDevUsers}</div>
+
+                <div className="node-set">
+                  {zoneGoerliServers.map((server) => {
+                    return (
+                            <ServerMonitor
+                                    address={server}
+                                    expectedEthNetwork="goerli"
+                                    contributeUsers={(usersCount) => this.sumGoerliDevUsers(usersCount)}
+                            />
+                    )
+                  })}
+                </div>
+                <div className="total-dev-users">Total Users (Goerli): {this.state.totalGoerliDevUsers}</div>
               </div>
             )
           } else {
