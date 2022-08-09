@@ -281,7 +281,7 @@
             <div>
               <b>Comms v2</b>
             </div>
-            <div>Hash: {getCommitHashInfo(commsHash, 'lighthouse')}</div>
+            <div>{getCommitHashInfo(commsHash, 'lighthouse')}</div>
             {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
             {props.layers
               .filter((layer) => layer.usersCount > 0)
@@ -304,7 +304,7 @@
         return (
           <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
             <b>Lambdas v{props.status.catalystVersion}</b>
-            <div>Hash: {getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
+            <div>{getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
             <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
           </div>
         )
@@ -314,7 +314,7 @@
         return (
           <div className={"bff " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "bff", [])}>
             <b>BFF</b>
-            <div>Hash: {getCommitHashInfo(props.status.commitHash, 'explorer-bff')}</div>
+            <div>{getCommitHashInfo(props.status.commitHash, 'explorer-bff')}</div>
           </div>
         )
       }
@@ -323,7 +323,7 @@
         return (
           <div className={"archipelago " + props.health.toLowerCase()}>
             <b>Archipelago (comms v3)</b>
-            <div>Hash: {getCommitHashInfo(props.status.commitHash, 'archipelago-service')}</div>
+            <div>{getCommitHashInfo(props.status.commitHash, 'archipelago-service')}</div>
           </div>
         )
       }
