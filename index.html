@@ -349,7 +349,6 @@
           super(props)
           this.state = {
             totalProductiveUsers: 0,
-            totalDevUsers: 0,
             totalGoerliDevUsers: 0,
             totalNonDAOMainnetUsers: 0,
             syncCheck: undefined,
@@ -362,10 +361,6 @@
 
         sumNonDAOMainnetUsers(usersCount = 0) {
           this.setState({ totalNonDAOMainnetUsers: this.state.totalNonDAOMainnetUsers + usersCount })
-        }
-
-        sumDevUsers(usersCount = 0) {
-          this.setState({ totalDevUsers: this.state.totalDevUsers + usersCount })
         }
 
         sumGoerliDevUsers(usersCount = 0) {
@@ -408,19 +403,6 @@
                   })}
                 </div>
                 <div className="total-productive-users">Total Users: {this.state.totalNonDAOMainnetUsers}</div>
-
-                <div className="node-set">
-                  {zoneRopstenServers.map((server) => {
-                    return (
-                            <ServerMonitor
-                                    address={server}
-                                    expectedEthNetwork="ropsten"
-                                    contributeUsers={(usersCount) => this.sumDevUsers(usersCount)}
-                            />
-                    )
-                  })}
-                </div>
-                <div className="total-dev-users">Total Users (Ropsten): {this.state.totalDevUsers}</div>
 
                 <div className="node-set">
                   {zoneGoerliServers.map((server) => {
