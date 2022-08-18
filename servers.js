@@ -20,11 +20,8 @@ const nonDAOMainnetServers = [
   "https://peer-historical.decentraland.org",
 ]
 
-const zoneRopstenServers = [
-  "https://peer-ue-2.decentraland.zone",
-]
-
 const zoneGoerliServers = [
   "https://peer.decentraland.zone",
+  "https://peer-ue-2.decentraland.zone",
   "https://peer-ap1.decentraland.zone",
 ]
