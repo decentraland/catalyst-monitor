@@ -563,7 +563,7 @@
 
         renderWorldMainnetServers() {
           return (
-            <div className="mariano">
+            <div>
               <div className="node-set">
                 {worldsMainnetServers.map((server) => {
                   return (
@@ -575,7 +575,7 @@
                   )
                 })}
               </div>
-              <div className="total-productive-users">Total Users: {this.state.totalWorldsUsers}</div>
+              <div className="total-productive-users">Total Worlds Users: {this.state.totalWorldsUsers}</div>
             </div>
           )
         }
@@ -611,19 +611,19 @@
                 </div>
                 <div className="total-dev-users">Total Users (Goerli): {this.state.totalGoerliDevUsers}</div>
 
-                <div className="mariano">
+                <div>
                   <div className="node-set">
                     {worldsGoerliServers.map((server) => {
                       return (
                               <WorldsServerMonitor
                                       address={server}
-                                      expectedEthNetwork="mainnet"
+                                      expectedEthNetwork="goerli"
                                       contributeUsers={(usersCount) => this.sumGoerliWorldsUsers(usersCount)}
                               />
                       )
                     })}
                   </div>
-                  <div className="total-productive-users">Total Users: {this.state.totalWorldsUsers}</div>
+                  <div className="total-dev-users">Total Worlds Users: {this.state.totalWorldsUsers}</div>
                 </div>
 
 
