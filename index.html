@@ -76,7 +76,7 @@
               lambda: data.lambdas.healthy ? 'Healthy' : 'Down',
             }})
           } catch (err) {
-            console.log(err)
+            console.error(err)
             this.getServerStatus("comms")
             this.getServerHealth()
           }
@@ -91,7 +91,7 @@
                 ...data,
               } })
             })
-            .catch(console.log)
+            .catch(console.error)
         }
 
         getServerStatus(server) {
@@ -113,14 +113,14 @@
                 this.processCommsData(data)
               }
             })
-            .catch(console.log)
+            .catch(console.error)
         }
 
         getContentFailedDeployments() {
           fetch(`${this.props.address}/content/failed-deployments`)
             .then((res) => res.json())
             .then((data) => this.setState({ contentFailedDeployments: data }))
-            .catch(console.log)
+            .catch(console.error)
         }
 
         processCommsData(commsStatus) {
@@ -217,10 +217,147 @@
         }
       }
 
+      class WorldsServerMonitor extends React.Component {
+        constructor(props) {
+          super(props)
+
+          this.state = {
+            content: {
+              commitHash: 'unknown',
+              worldsCount: 0,
+            },
+            comms: {
+              version: '',
+              commitHash: 'unknown',
+              usersInServer: 0,
+              worldsWithUsers: 0,
+            },
+            health: {
+              content: undefined,
+              comms: undefined,
+            },
+          }
+        }
+
+        componentDidMount() {
+          this.getWorldsNodeStatus()
+        }
+
+        async getWorldsNodeStatus() {
+          try {
+            await fetch(`${this.props.address}/about`)
+              .then((data) => data.json())
+              .then(async (data) => {
+                if (data && data.content && data.lambdas) {
+                  this.setState({
+                    health: {
+                      ...this.state.health,
+                      content: data.content.healthy && data.lambdas.healthy ? 'Healthy' : 'Down',
+                    }
+                  })
+                }
+
+                if (data && data.comms) {
+                  this.setState({
+                    health: {
+                      ...this.state.health,
+                      comms: data.comms.healthy ? 'Healthy' : 'Down'
+                    }
+                  })
+                  this.setState({
+                    comms: {
+                      ...this.state.comms,
+                      version: data.comms.protocol
+                    }
+                  })
+
+                  const url = new URL('/status', data.comms.fixedAdapter.replace('ws-room:', 'https://'))
+                  fetch(url.toString())
+                          .then(async (res) => await res.json())
+                          .then((data) => {
+                            this.setState({
+                              comms: {
+                                ...this.state.comms,
+                                commitHash: data.commitHash,
+                                usersInServer: data.users,
+                                worldsWithUsers: data.rooms
+                              }
+                            })
+
+                            this.props.contributeUsers(data.users, data.rooms)
+                          })
+                          .catch((error) => console.warn(error))
+                }
+              })
+
+            await fetch(`${this.props.address}/status`)
+                    .then((data) => data.json())
+                    .then((status) => {
+                      this.setState({
+                        content: {
+                          ...this.state.content,
+                          commitHash: status.commitHash,
+                          worldsCount: status.worldsCount,
+                        }
+                      })
+                    })
+                    .catch((error) => console.warn(error))
+
+          } catch (err) {
+            console.log(err)
+          }
+        }
+
+        getGlobalHealth() {
+          const healths = Object.values(this.state.health)
+          if (healths.includes("Down")) return "Down"
+          if (healths.includes("Unhealthy")) return "Unhealthy"
+          return "Healthy"
+        }
+
+        getHealth(server) {
+          return this.state.health[server] ? this.state.health[server] : "Unknown"
+        }
+
+        render() {
+          let title = this.props.address
+          let isHttps = false
+          if (this.props.address.startsWith("https://")) {
+            title = this.props.address.substring("https://".length)
+            isHttps = true
+          }
+          let globalHealth = this.getGlobalHealth()
+          return (
+                  <div
+                          className={
+                                  (this.props.expectedEthNetwork === "mainnet" ? "node-prd" : "node-dev") +
+                                  (isHttps ? "" : " node-wrong") +
+                                  " " +
+                                  globalHealth.toLowerCase()
+                          }
+                  >
+                    <div className="node-title">{title}</div>
+                    <div className="server-node-users">
+                      # {this.state.comms.usersInServer}
+                    </div>
+                    <WorldsContentServer
+                            status={this.state.content}
+                            address={this.props.address}
+                            health={this.getHealth("content")}
+                    />
+                    <WorldsCommsServer
+                            status={this.state.comms}
+                            health={this.getHealth("comms")}
+                    />
+
+                  </div>
+          )
+        }
+      }
+
       function ContentServer(props) {
         const clusterInfo = props.status.synchronizationStatus
         const expectedEthNetworkOk = props.status.ethNetwork === props.expectedEthNetwork
-        let otherServers = 0
 
         return (
           <div
@@ -294,6 +431,34 @@
         )
       }
 
+      function WorldsContentServer(props) {
+        return (
+                <div className={"content " + props.health.toLowerCase()}>
+                  <b>World Content Server</b>
+                  <br />
+                  <div>Hash: {getCommitHashInfo(props.status.commitHash, 'worlds-content-server')}</div>
+                  <div style={{ paddingLeft: "10px" }}> Deployed worlds: {props.status.worldsCount}</div>
+                </div>
+        )
+      }
+
+      function WorldsCommsServer(props) {
+        return (
+          <div className={"comms " + props.health.toLowerCase()}>
+            <div>
+              <b>Comms {props.status.version}</b>
+            </div>
+            <div>Hash: {getCommitHashInfo(props.status.commitHash, 'ws-room-service')}</div>
+            <div style={{ paddingLeft: "10px" }}>
+              Active users: <b>{props.status.usersInServer}</b>
+            </div>
+            <div style={{ paddingLeft: "10px" }}>
+              Inhabited worlds: <b>{props.status.worldsWithUsers}</b>
+            </div>
+          </div>
+        )
+      }
+
       function LambdasServer(props) {
         const expectedContentServerUrl = props.address + "/content"
         const currentContentServerUrl = props.status.contentServerUrl
@@ -349,6 +514,8 @@
           super(props)
           this.state = {
             totalProductiveUsers: 0,
+            totalWorldsUsers: 0,
+            totalGoerliWorldsUsers: 0,
             totalGoerliDevUsers: 0,
             totalNonDAOMainnetUsers: 0,
             syncCheck: undefined,
@@ -357,6 +524,14 @@
 
         sumProductiveUsers(usersCount = 0) {
           this.setState({ totalProductiveUsers: this.state.totalProductiveUsers + usersCount })
+        }
+
+        sumWorldsUsers(usersCount = 0) {
+          this.setState({ totalWorldsUsers: this.state.totalWorldsUsers + usersCount })
+        }
+
+        sumGoerliWorldsUsers(usersCount = 0) {
+          this.setState({ totalGoerliWorldsUsers: this.state.totalGoerliWorldsUsers + usersCount })
         }
 
         sumNonDAOMainnetUsers(usersCount = 0) {
@@ -382,6 +557,25 @@
                 })}
               </div>
               <div className="total-productive-users">Total Users: {this.state.totalProductiveUsers}</div>
+            </div>
+          )
+        }
+
+        renderWorldMainnetServers() {
+          return (
+            <div>
+              <div className="node-set">
+                {worldsMainnetServers.map((server) => {
+                  return (
+                    <WorldsServerMonitor
+                      address={server}
+                      expectedEthNetwork="mainnet"
+                      contributeUsers={(usersCount) => this.sumWorldsUsers(usersCount)}
+                    />
+                  )
+                })}
+              </div>
+              <div className="total-productive-users">Total Worlds Users: {this.state.totalWorldsUsers}</div>
             </div>
           )
         }
@@ -416,6 +610,23 @@
                   })}
                 </div>
                 <div className="total-dev-users">Total Users (Goerli): {this.state.totalGoerliDevUsers}</div>
+
+                <div>
+                  <div className="node-set">
+                    {worldsGoerliServers.map((server) => {
+                      return (
+                              <WorldsServerMonitor
+                                      address={server}
+                                      expectedEthNetwork="goerli"
+                                      contributeUsers={(usersCount) => this.sumGoerliWorldsUsers(usersCount)}
+                              />
+                      )
+                    })}
+                  </div>
+                  <div className="total-dev-users">Total Worlds Users: {this.state.totalGoerliWorldsUsers}</div>
+                </div>
+
+
               </div>
             )
           } else {
@@ -427,6 +638,7 @@
           return (
             <div>
               {this.renderDAOMainnetServers()}
+              {this.renderWorldMainnetServers()}
               {this.renderExtraServers()}
             </div>
           )

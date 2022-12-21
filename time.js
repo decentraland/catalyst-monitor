@@ -38,7 +38,7 @@ let allCommitHashInfo = {}
 
 
 function getCommitHashInfo(commitHash, repositoryName) {
-  if (!commitHash) {
+  if (!commitHash || commitHash === 'unknown') {
     return commitHash
   }
   if (!repositoryName) {
@@ -59,7 +59,7 @@ function renderCommitHashInfo(commitHash, repositoryName) {
       allCommitHashInfo[keyFrom(commitHash, repositoryName)] = shortHash(commitHash)
       return
     }
-    
+
     const date =  new Date(data.commit.author.date)
     allCommitHashInfo[keyFrom(commitHash, repositoryName)] = `${shortHash(commitHash)} (${deltaTime(date)} ago)`
   })
