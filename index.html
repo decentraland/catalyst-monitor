@@ -27,6 +27,7 @@
             configurations: {},
             content: {},
             lambdas: {},
+            lamb2: {},
             comms: {},
             bff: {},
             bffHealth: 'Unknown',
@@ -46,6 +47,7 @@
         async getNodeStatus() {
           this.getServerStatus("content")
           this.getServerStatus("lambdas")
+          this.getServerStatus("lamb2")
           this.getServerStatus("bff")
           this.getContentFailedDeployments()
 
@@ -74,6 +76,7 @@
               bff: data.bff.healthy ? 'Healthy' : 'Down',
               content: data.content.healthy ? 'Healthy' : 'Down',
               lambda: data.lambdas.healthy ? 'Healthy' : 'Down',
+              lamb2: data.lamb2.healthy ? 'Healthy' : 'Down',
             }})
           } catch (err) {
             console.error(err)
@@ -95,6 +98,20 @@
         }
 
         getServerStatus(server) {
+          // if (server === 'lamb2') {
+          //   fetch(`${this.props.address}/lamb2/ping`)
+          //     .then((res) => {
+          //       console.log('res:')
+          //       console.log(res)
+          //       const lamb2Health = res.status === 200 ? 'Healthy' : 'Down'
+          //       this.setState({ 
+          //         health: {
+          //           ...this.state.health,
+          //           lamb2: lamb2Health
+          //         }
+          //       })
+          //     })
+          // } else {
           fetch(`${this.props.address}/${server}/status?includeLayers=true`)
             .then((res) => {
               if (server === "bff") {
@@ -109,11 +126,14 @@
             .then((res) => res.json())
             .then((data) => {
               this.setState({ [server]: data })
+              console.log('setting state')
+              console.log(this.state)
               if (server === "comms") {
                 this.processCommsData(data)
               }
             })
             .catch(console.error)
+          // }
         }
 
         getContentFailedDeployments() {
@@ -194,6 +214,11 @@
                 status={this.state.lambdas}
                 address={this.props.address}
                 health={this.getHealth("lambda")}
+              />
+              <Lamb2Server
+                status={this.state.lamb2}
+                address={this.props.address}
+                health={this.getHealth("lamb2")}
               />
               <CommsServer
                 status={this.state.comms}
@@ -460,6 +485,8 @@
       }
 
       function LambdasServer(props) {
+        console.log('lambdas')
+        console.log(props)
         const expectedContentServerUrl = props.address + "/content"
         const currentContentServerUrl = props.status.contentServerUrl
         const contentServerUrlOk =
@@ -469,6 +496,24 @@
         return (
           <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
             <b>Lambdas v{props.status.catalystVersion}</b>
+            <div>{getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
+            <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
+          </div>
+        )
+      }
+      
+      function Lamb2Server(props) {
+        console.log('lamb2')
+        console.log(props)
+        const expectedContentServerUrl = props.address + "/content"
+        const currentContentServerUrl = props.status.contentServerUrl
+        const contentServerUrlOk =
+          currentContentServerUrl === expectedContentServerUrl ||
+          currentContentServerUrl === expectedContentServerUrl + "/"
+        const contentServerUrlStatus = contentServerUrlOk ? "OK" : `ERROR: ${currentContentServerUrl}`
+        return (
+          <div className={"lamb2 " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lamb2", [])}>
+            <b>Lamb2 v{props.status.catalystVersion}</b>
             <div>{getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
             <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
           </div>
