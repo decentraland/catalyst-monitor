@@ -112,8 +112,6 @@
             .then((res) => res.json())
             .then((data) => {
               this.setState({ [server]: data })
-              console.log('setting state')
-              console.log(this.state)
               if (server === "comms") {
                 this.processCommsData(data)
               }
@@ -470,8 +468,6 @@
       }
 
       function LambdasServer(props) {
-        console.log('lambdas')
-        console.log(props)
         const expectedContentServerUrl = props.address + "/content"
         const currentContentServerUrl = props.status.contentServerUrl
         const contentServerUrlOk =
@@ -488,8 +484,6 @@
       }
       
       function Lamb2Server(props) {
-        console.log('lamb2')
-        console.log(props)
         const expectedContentServerUrl = props.address + "/content"
         const currentContentServerUrl = props.status.contentServerUrl
         const contentServerUrlOk =
