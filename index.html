@@ -27,6 +27,7 @@
             configurations: {},
             content: {},
             lambdas: {},
+            lamb2: {},
             comms: {},
             bff: {},
             bffHealth: 'Unknown',
@@ -46,6 +47,7 @@
         async getNodeStatus() {
           this.getServerStatus("content")
           this.getServerStatus("lambdas")
+          this.getServerStatus("lamb2")
           this.getServerStatus("bff")
           this.getContentFailedDeployments()
 
@@ -74,6 +76,7 @@
               bff: data.bff.healthy ? 'Healthy' : 'Down',
               content: data.content.healthy ? 'Healthy' : 'Down',
               lambda: data.lambdas.healthy ? 'Healthy' : 'Down',
+              lamb2: data.lamb2.healthy ? 'Healthy' : 'Down',
             }})
           } catch (err) {
             console.error(err)
@@ -194,6 +197,11 @@
                 status={this.state.lambdas}
                 address={this.props.address}
                 health={this.getHealth("lambda")}
+              />
+              <Lamb2Server
+                status={this.state.lamb2}
+                address={this.props.address}
+                health={this.getHealth("lamb2")}
               />
               <CommsServer
                 status={this.state.comms}
@@ -469,6 +477,22 @@
         return (
           <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
             <b>Lambdas v{props.status.catalystVersion}</b>
+            <div>{getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
+            <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
+          </div>
+        )
+      }
+      
+      function Lamb2Server(props) {
+        const expectedContentServerUrl = props.address + "/content"
+        const currentContentServerUrl = props.status.contentServerUrl
+        const contentServerUrlOk =
+          currentContentServerUrl === expectedContentServerUrl ||
+          currentContentServerUrl === expectedContentServerUrl + "/"
+        const contentServerUrlStatus = contentServerUrlOk ? "OK" : `ERROR: ${currentContentServerUrl}`
+        return (
+          <div className={"lamb2 " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lamb2", [])}>
+            <b>Lamb2 v{props.status.catalystVersion}</b>
             <div>{getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
             <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
           </div>

@@ -65,6 +65,7 @@ body {
 /* Servers */
 .content,
 .lambdas,
+.lamb2,
 .comms,
 .bff,
 .archipelago,
@@ -81,6 +82,9 @@ body {
 .lambdas {
   background-color: var(--light-green);
 }
+.lamb2 {
+  background-color: var(--light-green);
+}
 .comms {
   background-color: var(--light-green);
 }
@@ -94,6 +98,7 @@ body {
 .content.down,
 .comms.down,
 .lambdas.down,
+.lamb2.down,
 .bff.down,
 .archipelago.down {
   background-color: var(--red);
@@ -102,6 +107,7 @@ body {
 .content.unhealthy,
 .comms.unhealthy,
 .lambdas.unhealthy,
+.lamb2.unhealthy,
 .bff.unhealthy,
 .archipelago.unhealthy {
   background-color: var(--yellow);
@@ -109,6 +115,7 @@ body {
 
 .comms.unknown,
 .lambdas.unknown,
+.lamb2.unknown,
 .bff.unknown,
 .archipelago.unknown {
   display: none;
