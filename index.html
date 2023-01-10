@@ -98,20 +98,6 @@
         }
 
         getServerStatus(server) {
-          // if (server === 'lamb2') {
-          //   fetch(`${this.props.address}/lamb2/ping`)
-          //     .then((res) => {
-          //       console.log('res:')
-          //       console.log(res)
-          //       const lamb2Health = res.status === 200 ? 'Healthy' : 'Down'
-          //       this.setState({ 
-          //         health: {
-          //           ...this.state.health,
-          //           lamb2: lamb2Health
-          //         }
-          //       })
-          //     })
-          // } else {
           fetch(`${this.props.address}/${server}/status?includeLayers=true`)
             .then((res) => {
               if (server === "bff") {
@@ -133,7 +119,6 @@
               }
             })
             .catch(console.error)
-          // }
         }
 
         getContentFailedDeployments() {
