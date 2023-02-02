@@ -222,12 +222,13 @@
           super(props)
 
           this.state = {
+            commitHash: 'unknown',
             content: {
-              commitHash: 'unknown',
-              worldsCount: 0,
+              worldsCount: undefined,
             },
             comms: {
-              version: '',
+              adapterType: '',
+              statusUrl: undefined,
               commitHash: 'unknown',
               usersInServer: 0,
               worldsWithUsers: 0,
@@ -245,66 +246,64 @@
 
         async getWorldsNodeStatus() {
           try {
-            await fetch(`${this.props.address}/about`)
+            await fetch(`${this.props.address}/status`)
               .then((data) => data.json())
               .then(async (data) => {
-                if (data && data.content && data.lambdas) {
-                  this.setState({
-                    health: {
-                      ...this.state.health,
-                      content: data.content.healthy && data.lambdas.healthy ? 'Healthy' : 'Down',
-                    }
-                  })
-                }
+                this.setState({
+                  ...this.state,
+                  content: {
+                    ...this.state.content,
+                    commitHash: data.content.commitHash,
+                    worldsCount: data.content.worldsCount,
+                  },
+                  comms: {
+                    ...this.state.comms,
+                    adapterType: data.comms.adapterType,
+                    statusUrl: data.comms.statusUrl,
+                    commitHash: data.comms.commitHash,
+                    usersInServer: data.comms.users,
+                    worldsWithUsers: data.comms.rooms
+                  },
+                  health: {
+                    ...this.state.health,
+                    content: 'Healthy',
+                    comms: 'Healthy'
+                  }
+                })
 
-                if (data && data.comms) {
-                  this.setState({
-                    health: {
-                      ...this.state.health,
-                      comms: data.comms.healthy ? 'Healthy' : 'Down'
-                    }
-                  })
-                  this.setState({
-                    comms: {
-                      ...this.state.comms,
-                      version: data.comms.protocol
-                    }
-                  })
-
-                  const url = new URL('/status', data.comms.fixedAdapter.replace('ws-room:', 'https://'))
-                  fetch(url.toString())
-                          .then(async (res) => await res.json())
-                          .then((data) => {
-                            this.setState({
-                              comms: {
-                                ...this.state.comms,
-                                commitHash: data.commitHash,
-                                usersInServer: data.users,
-                                worldsWithUsers: data.rooms
-                              }
-                            })
-
-                            this.props.contributeUsers(data.users, data.rooms)
-                          })
-                          .catch((error) => console.warn(error))
-                }
-              })
-
-            await fetch(`${this.props.address}/status`)
+                if (data.comms.adapterType === 'ws-room' && data.comms.statusUrl) {
+                  await fetch(data.comms.statusUrl)
                     .then((data) => data.json())
-                    .then((status) => {
+                    .then(async (_) => {
                       this.setState({
-                        content: {
-                          ...this.state.content,
-                          commitHash: status.commitHash,
-                          worldsCount: status.worldsCount,
+                        health: {
+                          ...this.state.health,
+                          comms: 'Healthy'
                         }
                       })
                     })
-                    .catch((error) => console.warn(error))
+                    .catch(() => {
+                      this.setState({
+                        health: {
+                          ...this.state.health,
+                          comms: 'Down'
+                        }
+                      })
+                    })
+                }
 
+                this.props.contributeUsers(data.comms.users, data.comms.rooms)
+              })
+              .catch(() => {
+                this.setState({
+                  health: {
+                    ...this.state.health,
+                    content: 'Down'
+                  }
+                })
+              })
           } catch (err) {
-            console.log(err)
+            console.error(err)
           }
         }
 
@@ -443,10 +442,14 @@
       }
 
       function WorldsCommsServer(props) {
+        const commsHuman = {
+          'ws-room': 'WS Room Service',
+          'livekit': 'LiveKit'
+        }
         return (
           <div className={"comms " + props.health.toLowerCase()}>
             <div>
-              <b>Comms {props.status.version}</b>
+              <b>Comms: {commsHuman[props.status.adapterType] || 'Unknown' }</b>
             </div>
             <div>Hash: {getCommitHashInfo(props.status.commitHash, 'ws-room-service')}</div>
             <div style={{ paddingLeft: "10px" }}>
