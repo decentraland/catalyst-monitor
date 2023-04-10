@@ -370,21 +370,6 @@
             <b>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</b>
             <br />
             <div>Hash: {getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
-            {props.status.snapshot != null ? (
-              <div>
-                Snapshot:
-                <div style={{ paddingLeft: "10px" }}>
-                  Last Generated: {deltaTime(props.status.snapshot.lastUpdatedTime)} ago
-                </div>
-                {Object.keys(props.status.snapshot.entities).sort().map((entity) => (
-                  <div style={{ paddingLeft: "10px" }}>
-                    {entity[0].toUpperCase() + entity.slice(1)}: {props.status.snapshot.entities[entity]}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div />
-            )}
             <div>
               Failed:{" "}
               {Array.isArray(props.failedDeployments) ? props.failedDeployments.length : props.failedDeployments}
