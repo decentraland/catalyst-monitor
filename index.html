@@ -15,28 +15,28 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 
     <script src="servers.js"></script>
-    <script src="time.js"></script>
 
     <script type="text/babel">
+
+      function shortHash(hash) {
+        if (hash && hash.length > 7) {
+          return hash.slice(0, 7)
+        }
+        return hash
+      }
+
+      function getHealthLabel(healthy) {
+        return healthy ? "Healthy" : "Down"
+      }
 
       class ServerMonitor extends React.Component {
         constructor(props) {
           super(props)
 
           this.state = {
-            configurations: {},
-            content: {},
-            lambdas: {},
-            comms: {},
-            bff: {},
-            bffHealth: 'Unknown',
-            archipelago: {},
-            archipelagoHealth: 'Unknown',
+            about: undefined,
             contentFailedDeployments: "?",
-            commsLayers: [],
             usersInServer: 0,
-            commsIslands: [],
-            health: {},
           }
         }
         componentDidMount() {
@@ -44,76 +44,12 @@
         }
 
         async getNodeStatus() {
-          this.getServerStatus("content")
-          this.getServerStatus("lambdas")
-          this.getServerStatus("bff")
           this.getContentFailedDeployments()
 
-          try {
-            const res = await fetch(`${this.props.address}/about`)
-            const data = await res.json()
-
-            const commsHealth = {}
-
-            if (data && data.comms.protocol === 'v2') {
-              commsHealth.comms = data.comms.healthy ? 'Healthy' : 'Down'
-              this.setState({ comms: data.comms })
-              this.getServerStatus("comms")
-            } else {
-              commsHealth.archipelago = data.comms.healthy ? 'Healthy' : 'Down'
-              this.setState({ archipelago: data.comms })
-              this.setState({ usersInServer: data.bff.userCount })
-              this.props.contributeUsers(data.bff.userCount)
-            }
-            this.setState({ configurations: data.configurations })
-            const bffHealth = res.status === 200 ? 'Healthy' : 'Down'
-            this.setState({ bff: data.bff })
-            this.setState({ health: {
-              ...this.state.health,
-              ...commsHealth,
-              bff: data.bff.healthy ? 'Healthy' : 'Down',
-              content: data.content.healthy ? 'Healthy' : 'Down',
-              lambda: data.lambdas.healthy ? 'Healthy' : 'Down',
-            }})
-          } catch (err) {
-            console.error(err)
-            this.getServerStatus("comms")
-            this.getServerHealth()
-          }
-        }
-
-        getServerHealth() {
-          fetch(`${this.props.address}/lambdas/health`)
-            .then((res) => res.json())
-            .then((data) => {
-              this.setState({ health: {
-                ...this.state.health,
-                ...data,
-              } })
-            })
-            .catch(console.error)
-        }
-
-        getServerStatus(server) {
-          fetch(`${this.props.address}/${server}/status?includeLayers=true`)
-            .then((res) => {
-              if (server === "bff") {
-                const bffHealth = res.status === 200 ? 'Healthy' : 'Down'
-                this.setState({ health: {
-                  ...this.state.health,
-                  bff: bffHealth
-                } })
-              }
-              return res
-            })
-            .then((res) => res.json())
-            .then((data) => {
-              this.setState({ [server]: data })
-              if (server === "comms") {
-                this.processCommsData(data)
-              }
-            })
-            .catch(console.error)
+          const res = await fetch(`${this.props.address}/about`)
+          const about = await res.json()
+          this.setState({ about, usersInServer: about.comms.usersCount })
+          this.props.contributeUsers(about.comms.usersCount)
         }
 
         getContentFailedDeployments() {
@@ -123,42 +59,6 @@
             .catch(console.error)
         }
 
-        processCommsData(commsStatus) {
-          let usersInServer
-          if (commsStatus.layers) {
-            usersInServer = commsStatus.layers.map((layer) => layer.usersCount).reduce((a, b) => a + b, 0)
-            this.setState({ commsLayers: commsStatus.layers })
-            delete commsStatus.layers
-            this.setState({ comms: commsStatus })
-          } else {
-            usersInServer = commsStatus.usersCount
-            this.fetchIslandsData()
-          }
-
-          this.setState({ usersInServer })
-          this.props.contributeUsers(usersInServer)
-        }
-
-        fetchIslandsData() {
-          fetch(`${this.props.address}/comms/islands`)
-            .then((res) => res.json())
-            .then((data) => {
-              if (data.ok) this.setState({ commsIslands: data.islands })
-            })
-            .catch(console.error)
-        }
-
-        getGlobalHealth() {
-          const healths = Object.values(this.state.health)
-          if (healths.includes("Down")) return "Down"
-          if (healths.includes("Unhealthy")) return "Unhealthy"
-          return "Healthy"
-        }
-
-        getHealth(server) {
-          return this.state.health[server] ? this.state.health[server] : "Unknown"
-        }
-
         render() {
           let title = this.props.address
           let isHttps = false
@@ -166,51 +66,41 @@
             title = this.props.address.substring("https://".length)
             isHttps = true
           }
-          let isStatusReceived = this.state.content.catalystVersion && this.state.lambdas.version
-          if (title === "peer-historical.decentraland.org") // Historical catalyst is content-only
-            isStatusReceived = this.state.content.catalystVersion
-          let globalHealth = this.getGlobalHealth()
+          if (!this.state.about) {
+            return (
+            <div></div>
+            )
+          }
+          let globalHealth = getHealthLabel(this.state.about.healthy)
           return (
             <div
               className={
                 (this.props.expectedEthNetwork === "mainnet" ? "node-prd" : "node-dev") +
-                (isHttps && isStatusReceived ? "" : " node-wrong") +
+                (isHttps ? "" : " node-wrong") +
                 " " +
                 globalHealth.toLowerCase()
               }
             >
               <div className="node-title">{title}</div>
               <div className="server-node-users">
-                # {this.state.comms.name || this.state.configurations.realmName}: {this.state.usersInServer}
+                # {this.state.about.configurations.realmName}: {this.state.usersInServer}
               </div>
               <ContentServer
-                status={this.state.content}
+                status={this.state.about}
                 address={this.props.address}
                 failedDeployments={this.state.contentFailedDeployments}
                 expectedEthNetwork={this.props.expectedEthNetwork}
-                health={this.getHealth("content")}
+                health={getHealthLabel(this.state.about.content.healthy)}
               />
               <LambdasServer
-                status={this.state.lambdas}
+                status={this.state.about}
                 address={this.props.address}
-                health={this.getHealth("lambda")}
-              />
-              <CommsServer
-                status={this.state.comms}
-                address={this.props.address}
-                layers={this.state.commsLayers}
-                islands={this.state.commsIslands}
-                health={this.getHealth("comms")}
+                health={getHealthLabel(this.state.about.lambdas.healthy)}
               />
               <ArchipelagoServer
+                status={this.state.about}
                 address={this.props.address}
-                status={this.state.archipelago}
-                health={this.getHealth("archipelago")}
-              />
-              <BffServer
-                address={this.props.address}
-                status={this.state.bff}
-                health={this.getHealth("bff")}
+                health={getHealthLabel(this.state.about.comms.healthy)}
               />
             </div>
           )
@@ -355,9 +245,6 @@
       }
 
       function ContentServer(props) {
-        const clusterInfo = props.status.synchronizationStatus
-        const expectedEthNetworkOk = props.status.ethNetwork === props.expectedEthNetwork
-
         return (
           <div
             className={"content " + props.health.toLowerCase()}
@@ -365,52 +252,15 @@
               showFullStatus(props, "content", [{ name: "Failed Deployments", data: props.failedDeployments }])
             }
           >
-            <b>Content v{props.status.catalystVersion}</b>
+            <b>Content v{props.status.content.version}</b>
             <br />
-            <b>State: {clusterInfo ? clusterInfo.synchronizationState : "Unknown"}</b>
+            <b>State: {props.status.content.synchronizationStatus || "Unknown"}</b>
             <br />
-            <div>Hash: {getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
+            <div>Hash: {shortHash(props.status.content.commitHash)}</div>
             <div>
               Failed:{" "}
               {Array.isArray(props.failedDeployments) ? props.failedDeployments.length : props.failedDeployments}
             </div>
-            <div>{!expectedEthNetworkOk ? "Eth: " + props.status.ethNetwork : ""}</div>
-          </div>
-        )
-      }
-
-      function CommsServer(props) {
-        const maxLayerName = Math.max(...props.layers.map((layer) => layer.name.length))
-        const minifiedLayers = props.layers.map(
-          (layer) => `${layer.name.padEnd(maxLayerName)}: ${layer.usersCount}/${layer.maxUsers}`
-        )
-        const islands = props.islands.map(
-          (island) =>
-            `${island.id} (${island.center.map((it) => Math.round(it)).join(", ")}): ${island.peers.length}/${
-              island.maxPeers
-            }`
-        )
-        const extraInfo = []
-        if (minifiedLayers.length > 0) extraInfo.push({ name: "Layers", data: minifiedLayers })
-        if (islands.length > 0) extraInfo.push({ name: "Islands", data: islands })
-        let commsHash = props.status.commitHash || (props.status.env && props.status.env.commitHash)
-        return (
-          <div
-            className={"comms " + props.health.toLowerCase()}
-            onClick={() => showFullStatus(props, "comms", extraInfo)}
-          >
-            <div>
-              <b>Comms v2</b>
-            </div>
-            <div>{getCommitHashInfo(commsHash, 'lighthouse')}</div>
-            {props.islands.length > 0 ? <div>Islands: {props.islands.length}</div> : ""}
-            {props.layers
-              .filter((layer) => layer.usersCount > 0)
-              .map((layer) => (
-                <div>
-                  {layer.name}: {layer.usersCount}/{layer.maxUsers}
-                </div>
-              ))}
           </div>
         )
       }
@@ -420,7 +270,7 @@
                 <div className={"content " + props.health.toLowerCase()}>
                   <b>World Content Server</b>
                   <br />
-                  <div>Hash: {getCommitHashInfo(props.status.commitHash, 'worlds-content-server')}</div>
+                  <div>Hash: {shortHash(props.status.commitHash)}</div>
                   <div style={{ paddingLeft: "10px" }}> Deployed worlds: {props.status.worldsCount}</div>
                 </div>
         )
@@ -436,7 +286,7 @@
             <div>
               <b>Comms: {commsHuman[props.status.adapterType] || 'Unknown' }</b>
             </div>
-            <div>Hash: {getCommitHashInfo(props.status.commitHash, 'ws-room-service')}</div>
+            <div>Hash: {shortHash(props.status.commitHash)}</div>
             <div style={{ paddingLeft: "10px" }}>
               Active users: <b>{props.status.usersInServer}</b>
             </div>
@@ -448,44 +298,29 @@
       }
 
       function LambdasServer(props) {
-        const expectedContentServerUrl = props.address + "/content"
-        const currentContentServerUrl = props.status.contentServerUrl
-        const contentServerUrlOk =
-          currentContentServerUrl === expectedContentServerUrl ||
-          currentContentServerUrl === expectedContentServerUrl + "/"
-        const contentServerUrlStatus = contentServerUrlOk ? "OK" : `ERROR: ${currentContentServerUrl}`
         return (
           <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
-            <b>Lambdas v{props.status.catalystVersion}</b>
-            <div>{getCommitHashInfo(props.status.commitHash, 'catalyst')}</div>
-            <div>{!contentServerUrlOk ? "CSU: " + contentServerUrlStatus : ""}</div>
-          </div>
-        )
-      }
-
-      function BffServer(props) {
-        return (
-          <div className={"bff " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "bff", [])}>
-            <b>BFF</b>
-            <div>{getCommitHashInfo(props.status.commitHash, 'explorer-bff')}</div>
+            <b>Lambdas v{props.status.lambdas.version}</b>
+            <div>Hash: {shortHash(props.status.lambdas.commitHash)}</div>
           </div>
         )
       }
 
       function ArchipelagoServer(props) {
         return (
-          <div className={"archipelago " + props.health.toLowerCase()}>
-            <b>Archipelago (comms v3)</b>
-            <div>{getCommitHashInfo(props.status.commitHash, 'archipelago-service')}</div>
+          <div className={"archipelago " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "archipelago", [])}>
+            <b>Archipelago v{props.status.comms.version}</b>
+            <div>Hash: {shortHash(props.status.comms.commitHash)}</div>
           </div>
         )
       }
 
-      function showFullStatus(props, server, extraInfos) {
-        const statusUrl = server !== 'archipelago' ? `${props.address}/${server}/status` : `${props.address}/bff/cluster-status`
+      async function showFullStatus(props, server, extraInfos) {
+        const statusUrl = `${props.address}/${server}/status`
+        const status = await fetch(statusUrl).then((r) => r.json())
         const contentHtml =
           "<pre style='text-align:left'>" +
-          `<div>Status: ${JSON.stringify(props.status, null, 2)}</div>` +
+          `<div>Status: ${JSON.stringify(status, null, 2)}</div>` +
           extraInfos
             .map((extraInfo) => `<div>${extraInfo.name}: ${JSON.stringify(extraInfo.data, null, 2)}</div>`)
             .join() +
