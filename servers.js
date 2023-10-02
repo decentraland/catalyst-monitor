@@ -11,6 +11,7 @@ const DAOMainnetServers = [
   "https://peer.kyllian.me",
   "https://peer.uadevops.com",
   "https://peer.dclnodes.io",
+  "https://realm-provider.decentraland.org/main"
 ]
 
 const nonDAOMainnetServers = [
@@ -25,12 +26,13 @@ const worldsMainnetServers = [
   "https://worlds-content-server.decentraland.org",
 ]
 
-const zoneGoerliServers = [
+const zoneSepoliaServers = [
   "https://peer.decentraland.zone",
   "https://peer-ue-2.decentraland.zone",
   "https://peer-ap1.decentraland.zone",
+  "https://realm-provider.decentraland.zone/main",
 ]
 
-const worldsGoerliServers = [
+const worldsSepoliaServers = [
   "https://worlds-content-server.decentraland.zone",
 ]

@@ -68,7 +68,16 @@
           }
           if (!this.state.about) {
             return (
-            <div></div>
+              <div
+                className={
+                  (this.props.expectedEthNetwork === "mainnet" ? "node-prd" : "node-dev") +
+                  (isHttps ? "" : " node-wrong") +
+                  " " +
+                  getHealthLabel(false).toLowerCase()
+                }
+              >
+              <div className="node-title">{title}</div>
+              </div>
             )
           }
           let globalHealth = getHealthLabel(this.state.about.healthy)
@@ -90,11 +99,13 @@
                 address={this.props.address}
                 failedDeployments={this.state.contentFailedDeployments}
                 expectedEthNetwork={this.props.expectedEthNetwork}
+                realm={this.state.about.configurations.realmName}
                 health={getHealthLabel(this.state.about.content.healthy)}
               />
               <LambdasServer
                 status={this.state.about}
                 address={this.props.address}
+                realm={this.state.about.configurations.realmName}
                 health={getHealthLabel(this.state.about.lambdas.healthy)}
               />
               <ArchipelagoServer
@@ -245,6 +256,9 @@
       }
 
       function ContentServer(props) {
+        if (props.realm === 'main') {
+          return (<div></div>)
+        }
         return (
           <div
             className={"content " + props.health.toLowerCase()}
@@ -298,6 +312,9 @@
       }
 
       function LambdasServer(props) {
+        if (props.realm === 'main') {
+          return (<div></div>)
+        }
         return (
           <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
             <b>Lambdas v{props.status.lambdas.version}</b>
@@ -338,8 +355,8 @@
           this.state = {
             totalProductiveUsers: 0,
             totalWorldsUsers: 0,
-            totalGoerliWorldsUsers: 0,
-            totalGoerliDevUsers: 0,
+            totalSepoliaWorldsUsers: 0,
+            totalSepoliaDevUsers: 0,
             totalNonDAOMainnetUsers: 0,
             syncCheck: undefined,
           }
@@ -353,16 +370,16 @@
           this.setState({ totalWorldsUsers: this.state.totalWorldsUsers + usersCount })
         }
 
-        sumGoerliWorldsUsers(usersCount = 0) {
-          this.setState({ totalGoerliWorldsUsers: this.state.totalGoerliWorldsUsers + usersCount })
+        sumSepoliaWorldsUsers(usersCount = 0) {
+          this.setState({ totalSepoliaWorldsUsers: this.state.totalSepoliaWorldsUsers + usersCount })
         }
 
         sumNonDAOMainnetUsers(usersCount = 0) {
           this.setState({ totalNonDAOMainnetUsers: this.state.totalNonDAOMainnetUsers + usersCount })
         }
 
-        sumGoerliDevUsers(usersCount = 0) {
-          this.setState({ totalGoerliDevUsers: this.state.totalGoerliDevUsers + usersCount })
+        sumSepoliaDevUsers(usersCount = 0) {
+          this.setState({ totalSepoliaDevUsers: this.state.totalSepoliaDevUsers + usersCount })
         }
 
         renderDAOMainnetServers() {
@@ -422,31 +439,31 @@
                 <div className="total-productive-users">Total Users: {this.state.totalNonDAOMainnetUsers}</div>
 
                 <div className="node-set">
-                  {zoneGoerliServers.map((server) => {
+                  {zoneSepoliaServers.map((server) => {
                     return (
                             <ServerMonitor
                                     address={server}
-                                    expectedEthNetwork="goerli"
-                                    contributeUsers={(usersCount) => this.sumGoerliDevUsers(usersCount)}
+                                    expectedEthNetwork="sepolia"
+                                    contributeUsers={(usersCount) => this.sumSepoliaDevUsers(usersCount)}
                             />
                     )
                   })}
                 </div>
-                <div className="total-dev-users">Total Users (Goerli): {this.state.totalGoerliDevUsers}</div>
+                <div className="total-dev-users">Total Users (Sepolia): {this.state.totalSepoliaDevUsers}</div>
 
                 <div>
                   <div className="node-set">
-                    {worldsGoerliServers.map((server) => {
+                    {worldsSepoliaServers.map((server) => {
                       return (
                               <WorldsServerMonitor
                                       address={server}
-                                      expectedEthNetwork="goerli"
-                                      contributeUsers={(usersCount) => this.sumGoerliWorldsUsers(usersCount)}
+                                      expectedEthNetwork="sepolia"
+                                      contributeUsers={(usersCount) => this.sumSepoliaWorldsUsers(usersCount)}
                               />
                       )
                     })}
                   </div>
-                  <div className="total-dev-users">Total Worlds Users: {this.state.totalGoerliWorldsUsers}</div>
+                  <div className="total-dev-users">Total Worlds Users: {this.state.totalSepoliaWorldsUsers}</div>
                 </div>
 
 
