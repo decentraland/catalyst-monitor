@@ -45,8 +45,13 @@ body {
 
 .node-title {
   font-weight: bold;
-  padding: 4px;
-  width: 180px;
+  padding: 4px;  
+  width: auto;      
+  min-width: 180px;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-wrap: nowrap;
 }
 .total-productive-users,
 .total-dev-users {
