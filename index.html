@@ -125,7 +125,7 @@
           this.state = {
             commitHash: 'unknown',
             content: {
-              worldsCount: undefined,
+              worldsCount: {ens: 0, dcl: 0},
             },
             comms: {
               adapterType: '',
@@ -155,7 +155,7 @@
                   content: {
                     ...this.state.content,
                     commitHash: data.content.commitHash,
-                    worldsCount: data.content.worldsCount,
+                    worldsCount: typeof data.content.worldsCount === 'number' ? {ens: 0, dcl: data.content.worldsCount} : data.content.worldsCount
                   },
                   comms: {
                     ...this.state.comms,
@@ -285,7 +285,8 @@
                   <b>World Content Server</b>
                   <br />
                   <div>Hash: {shortHash(props.status.commitHash)}</div>
-                  <div style={{ paddingLeft: "10px" }}> Deployed worlds: {props.status.worldsCount}</div>
+                  <div style={{ paddingLeft: "10px" }}> Deployed DCL worlds: {props.status.worldsCount.dcl}</div>
+                  <div style={{ paddingLeft: "10px" }}> Deployed ENS worlds: {props.status.worldsCount.ens}</div>
                 </div>
         )
       }
