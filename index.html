@@ -48,7 +48,8 @@
 
           const res = await fetch(`${this.props.address}/about`)
           const about = await res.json()
-          this.setState({ about, usersInServer: about.comms.usersCount })
+
+          this.setState({ about, usersInServer: about.comms ? about.comms.usersCount: 0 })
           this.props.contributeUsers(about.comms.usersCount)
         }
 
@@ -66,6 +67,7 @@
             title = this.props.address.substring("https://".length)
             isHttps = true
           }
+
           if (!this.state.about) {
             return (
               <div
@@ -108,11 +110,11 @@
                 realm={this.state.about.configurations.realmName}
                 health={getHealthLabel(this.state.about.lambdas.healthy)}
               />
-              <ArchipelagoServer
+              { this.state.about.comms && <ArchipelagoServer
                 status={this.state.about}
                 address={this.props.address}
                 health={getHealthLabel(this.state.about.comms.healthy)}
-              />
+              /> }
             </div>
           )
         }
