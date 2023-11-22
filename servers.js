@@ -17,9 +17,7 @@ const DAOMainnetServers = [
 const nonDAOMainnetServers = [
   "https://peer-testing.decentraland.org",
   "https://peer-testing-2.decentraland.org",
-  "https://peer-testing-3.decentraland.org",
-  "https://peer-testing-4.decentraland.org",
-  // "https://peer-historical.decentraland.org",
+  "https://peer-testing-3.decentraland.org"
 ]
 
 const worldsMainnetServers = [
