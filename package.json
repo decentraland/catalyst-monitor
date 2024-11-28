@@ -30,7 +30,7 @@
   "homepage": "https://github.com/decentraland/catalyst-monitor#readme",
   "engines": {
     "node": "20.*",
-    "npm": "8.* || 9.*"
+    "npm": "8.* || 9.* || 10.*"
   },
   "dependencies": {
     "@dcl/catalyst-api-specs": "^3.3.0",
