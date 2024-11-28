@@ -35,9 +35,10 @@
   "dependencies": {
     "@dcl/catalyst-api-specs": "^3.3.0",
     "@dcl/ui-env": "^1.4.0",
-    "decentraland-ui2": "^0.0.2",
+    "decentraland-ui2": "^0.7.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
     "@dcl/eslint-config": "^2.2.1",

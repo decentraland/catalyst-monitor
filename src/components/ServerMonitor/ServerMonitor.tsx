@@ -21,12 +21,20 @@ const ServerMonitor = React.memo((props: ServerMonitorProps) => {
 
   useEffect(() => {
     const getNodeStatus = async () => {
-      getContentFailedDeployments()
+      if (
+        address !== "https://realm-provider.decentraland.org/main" &&
+        address !== "https://realm-provider-ea.decentraland.org/main"
+      ) {
+        getContentFailedDeployments()
+      }
 
       const res = await fetch(`${address}/about`)
       const about: About = await res.json()
 
       const usersInServer = about.comms?.usersCount ? about.comms.usersCount : 0
+
+      console.log(" > address > ", address)
+      console.log(" > usersInServer > ", usersInServer)
 
       setState((prev) => ({
         ...prev,
@@ -48,6 +56,7 @@ const ServerMonitor = React.memo((props: ServerMonitorProps) => {
     getNodeStatus()
   }, [])
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [statusModal, setStatusModal] = useState<
     | false
     | {
@@ -55,8 +64,6 @@ const ServerMonitor = React.memo((props: ServerMonitorProps) => {
         extra?: { name: string; data?: FailedDeployments }[]
       }
   >(false)
-
-  console.log(statusModal)
 
   const handleShowStatus = useCallback(
     async (

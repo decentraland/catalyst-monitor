@@ -1,6 +1,13 @@
 import * as React from "react"
 import { useCallback, useState } from "react"
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
+import { Typography } from "decentraland-ui2"
 import { ServerMonitor } from "../../ServerMonitor/ServerMonitor"
+import {
+  ServersContainer,
+  ServersSummary,
+  ServersWrapper,
+} from "../Servers.styled"
 
 const DAOMainnetServersUrls = [
   "https://peer-ec1.decentraland.org",
@@ -20,28 +27,43 @@ const DAOMainnetServersUrls = [
 
 const DAOMainnetServers = React.memo(() => {
   const [totalProductiveUsers, setTotalProductiveUsers] = useState(0)
-  const sumProductiveUsers = useCallback((usersCount = 0) => {
-    setTotalProductiveUsers((prev) => prev + usersCount)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [serversCounted, setServersCounted] = useState(new Set<string>())
+
+  const sumProductiveUsers = useCallback((server: string, usersCount = 0) => {
+    setServersCounted((prevServers) => {
+      if (!prevServers.has(server)) {
+        setTotalProductiveUsers((prev) => prev + usersCount)
+        return new Set(prevServers).add(server)
+      }
+      return prevServers
+    })
   }, [])
 
   return (
-    <div>
-      <div className="node-set">
-        {DAOMainnetServersUrls.map((server, key) => {
-          return (
-            <ServerMonitor
-              key={key}
-              address={server}
-              expectedEthNetwork="mainnet"
-              contributeUsers={(usersCount) => sumProductiveUsers(usersCount)}
-            />
-          )
-        })}
-      </div>
-      <div className="total-productive-users">
-        Total Users: {totalProductiveUsers}
-      </div>
-    </div>
+    <ServersContainer defaultExpanded>
+      <ServersSummary
+        expandIcon={<ExpandMoreIcon />}
+        aria-controls="DAOMainnetServers-content"
+        id="DAOMainnetServers-header"
+      >
+        <Typography variant="body1">
+          Total Users: {totalProductiveUsers}
+        </Typography>
+      </ServersSummary>
+      <ServersWrapper>
+        {DAOMainnetServersUrls.map((server, key) => (
+          <ServerMonitor
+            key={key}
+            address={server}
+            expectedEthNetwork="mainnet"
+            contributeUsers={(usersCount) =>
+              sumProductiveUsers(server, usersCount)
+            }
+          />
+        ))}
+      </ServersWrapper>
+    </ServersContainer>
   )
 })
 

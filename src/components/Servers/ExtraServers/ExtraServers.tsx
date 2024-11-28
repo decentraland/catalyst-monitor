@@ -1,7 +1,14 @@
 import * as React from "react"
 import { useCallback, useState } from "react"
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
+import { Typography } from "decentraland-ui2"
 import { ServerMonitor } from "../../ServerMonitor/ServerMonitor"
 import { WorldsServerMonitor } from "../../ServerMonitor/WorldsServerMonitor"
+import {
+  ServersContainer,
+  ServersSummary,
+  ServersWrapper,
+} from "../Servers.styled"
 
 const nonDAOMainnetServers = [
   "https://peer-testing.decentraland.org",
@@ -19,81 +26,83 @@ const zoneSepoliaServers = [
 const worldsSepoliaServers = ["https://worlds-content-server.decentraland.zone"]
 
 const ExtraServers = React.memo(() => {
-  const [totalSepoliaWorldsUsers, setTotalSepoliaWorldsUsers] = useState(0)
-  const [totalSepoliaDevUsers, setTotalSepoliaDevUsers] = useState(0)
   const [totalNonDAOMainnetUsers, setTotalNonDAOMainnetUsers] = useState(0)
-  // const [syncCheck, setSyncCheck] = useState(undefined)
+  const [totalSepoliaDevUsers, setTotalSepoliaDevUsers] = useState(0)
+  const [totalSepoliaWorldsUsers, setTotalSepoliaWorldsUsers] = useState(0)
+  const [serversCounted, setServersCounted] = useState(new Set<string>())
 
-  const sumSepoliaWorldsUsers = useCallback((usersCount = 0) => {
-    setTotalSepoliaWorldsUsers((prev) => prev + usersCount)
-  }, [])
-
-  const sumNonDAOMainnetUsers = useCallback((usersCount = 0) => {
-    setTotalNonDAOMainnetUsers((prev) => prev + usersCount)
-  }, [])
-
-  const sumSepoliaDevUsers = useCallback((usersCount = 0) => {
-    setTotalSepoliaDevUsers((prev) => prev + usersCount)
-  }, [])
+  const sumUsers = useCallback(
+    (
+      server: string,
+      usersCount: number,
+      setter: React.Dispatch<React.SetStateAction<number>>
+    ) => {
+      const validUsersCount = Number(usersCount) || 0 // Asegurarse de que usersCount sea un número
+      setServersCounted((prevServers) => {
+        if (!prevServers.has(server)) {
+          setter((prev) => prev + validUsersCount)
+          return new Set(prevServers).add(server)
+        }
+        return prevServers
+      })
+    },
+    []
+  )
 
   const currentUrl = window.location.href.toString()
+
   if (currentUrl.indexOf("includeDevServers") >= 0) {
     return (
-      <div>
-        <div className="node-set">
-          {nonDAOMainnetServers.map((server, key) => {
-            return (
-              <ServerMonitor
-                key={key}
-                address={server}
-                expectedEthNetwork="mainnet"
-                contributeUsers={(usersCount) =>
-                  sumNonDAOMainnetUsers(usersCount)
-                }
-              />
-            )
-          })}
-        </div>
-        <div className="total-productive-users">
-          Total Users: {totalNonDAOMainnetUsers}
-        </div>
-
-        <div className="node-set">
-          {zoneSepoliaServers.map((server, key) => {
-            return (
-              <ServerMonitor
-                key={key}
-                address={server}
-                expectedEthNetwork="sepolia"
-                contributeUsers={(usersCount) => sumSepoliaDevUsers(usersCount)}
-              />
-            )
-          })}
-        </div>
-        <div className="total-dev-users">
-          Total Users (Sepolia): {totalSepoliaDevUsers}
-        </div>
-
-        <div>
-          <div className="node-set">
-            {worldsSepoliaServers.map((server, key) => {
-              return (
-                <WorldsServerMonitor
-                  key={key}
-                  address={server}
-                  expectedEthNetwork="sepolia"
-                  contributeUsers={(usersCount) =>
-                    sumSepoliaWorldsUsers(usersCount)
-                  }
-                />
-              )
-            })}
-          </div>
-          <div className="total-dev-users">
-            Total Worlds Users: {totalSepoliaWorldsUsers}
-          </div>
-        </div>
-      </div>
+      <ServersContainer defaultExpanded>
+        <ServersSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="ExtraServers-content"
+          id="ExtraServers-header"
+        >
+          <Typography variant="body1">
+            Total Users:{" "}
+            {totalNonDAOMainnetUsers +
+              totalSepoliaDevUsers +
+              totalSepoliaWorldsUsers}
+          </Typography>
+        </ServersSummary>
+        <ServersWrapper>
+          {nonDAOMainnetServers.map((server, key) => (
+            <ServerMonitor
+              key={key}
+              address={server}
+              expectedEthNetwork="mainnet"
+              contributeUsers={(usersCount) =>
+                sumUsers(server, usersCount, setTotalNonDAOMainnetUsers)
+              }
+            />
+          ))}
+        </ServersWrapper>
+        <ServersWrapper>
+          {zoneSepoliaServers.map((server, key) => (
+            <ServerMonitor
+              key={key}
+              address={server}
+              expectedEthNetwork="sepolia"
+              contributeUsers={(usersCount) =>
+                sumUsers(server, usersCount, setTotalSepoliaDevUsers)
+              }
+            />
+          ))}
+        </ServersWrapper>
+        <ServersWrapper>
+          {worldsSepoliaServers.map((server, key) => (
+            <WorldsServerMonitor
+              key={key}
+              address={server}
+              expectedEthNetwork="sepolia"
+              contributeUsers={(usersCount) =>
+                sumUsers(server, usersCount, setTotalSepoliaWorldsUsers)
+              }
+            />
+          ))}
+        </ServersWrapper>
+      </ServersContainer>
     )
   } else {
     return <div />
