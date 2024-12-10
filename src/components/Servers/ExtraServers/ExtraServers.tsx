@@ -50,7 +50,8 @@ const ExtraServers = React.memo(() => {
   )
 
   const currentUrl = window.location.href.toString()
-
+  // TODO delete this
+  console.log("test")
   if (currentUrl.indexOf("includeDevServers") >= 0) {
     return (
       <ServersContainer defaultExpanded>
