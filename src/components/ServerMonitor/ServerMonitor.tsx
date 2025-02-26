@@ -56,13 +56,12 @@ const ServerMonitor = React.memo((props: ServerMonitorProps) => {
     getNodeStatus()
   }, [])
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [statusModal, setStatusModal] = useState<
-    | false
+  const [, setStatusModal] = useState<
     | {
         statusContent: StatusContent
         extra?: { name: string; data?: FailedDeployments }[]
       }
+    | false
   >(false)
 
   const handleShowStatus = useCallback(

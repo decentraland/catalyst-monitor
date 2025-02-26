@@ -27,7 +27,7 @@
   "bugs": {
     "url": "https://github.com/decentraland/catalyst-monitor/issues"
   },
-  "homepage": "https://github.com/decentraland/catalyst-monitor#readme",
+  "homepage": "",
   "engines": {
     "node": "20.*",
     "npm": "8.* || 9.* || 10.*"

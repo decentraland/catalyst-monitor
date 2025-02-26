@@ -13,17 +13,8 @@ const worldsMainnetServers = ["https://worlds-content-server.decentraland.org"]
 
 const WorldMainnetServers = React.memo(() => {
   const [totalWorldsUsers, setTotalWorldsUsers] = useState(0)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [serversCounted, setServersCounted] = useState(new Set<string>())
-
-  const sumWorldsUsers = useCallback((server: string, usersCount = 0) => {
-    setServersCounted((prevServers) => {
-      if (!prevServers.has(server)) {
-        setTotalWorldsUsers((prev) => prev + usersCount)
-        return new Set(prevServers).add(server)
-      }
-      return prevServers
-    })
+  const sumWorldsUsers = useCallback((_server: string, usersCount = 0) => {
+    setTotalWorldsUsers((prev) => prev + usersCount)
   }, [])
 
   return (

@@ -29,7 +29,7 @@ const ExtraServers = React.memo(() => {
   const [totalNonDAOMainnetUsers, setTotalNonDAOMainnetUsers] = useState(0)
   const [totalSepoliaDevUsers, setTotalSepoliaDevUsers] = useState(0)
   const [totalSepoliaWorldsUsers, setTotalSepoliaWorldsUsers] = useState(0)
-  const [serversCounted, setServersCounted] = useState(new Set<string>())
+  const [, setServersCounted] = useState(new Set<string>())
 
   const sumUsers = useCallback(
     (
@@ -38,7 +38,7 @@ const ExtraServers = React.memo(() => {
       setter: React.Dispatch<React.SetStateAction<number>>
     ) => {
       const validUsersCount = Number(usersCount) || 0 // Asegurarse de que usersCount sea un número
-      setServersCounted((prevServers) => {
+      setServersCounted((prevServers: Set<string>) => {
         if (!prevServers.has(server)) {
           setter((prev) => prev + validUsersCount)
           return new Set(prevServers).add(server)

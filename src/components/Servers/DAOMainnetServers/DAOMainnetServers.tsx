@@ -27,11 +27,10 @@ const DAOMainnetServersUrls = [
 
 const DAOMainnetServers = React.memo(() => {
   const [totalProductiveUsers, setTotalProductiveUsers] = useState(0)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [serversCounted, setServersCounted] = useState(new Set<string>())
+  const [, setServersCounted] = useState(new Set<string>())
 
   const sumProductiveUsers = useCallback((server: string, usersCount = 0) => {
-    setServersCounted((prevServers) => {
+    setServersCounted((prevServers: Set<string>) => {
       if (!prevServers.has(server)) {
         setTotalProductiveUsers((prev) => prev + usersCount)
         return new Set(prevServers).add(server)
