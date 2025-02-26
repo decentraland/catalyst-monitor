@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Catalyst Nodes Monitor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@16.12.0/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@16.12.0/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+  <script src="servers.js"></script>
+
+  <script type="text/babel">
+
+    function shortHash(hash) {
+      if (hash && hash.length > 7) {
+        return hash.slice(0, 7)
+      }
+      return hash
+    }
+
+    function getHealthLabel(healthy) {
+      return healthy ? "Healthy" : "Down"
+    }
+
+    class ServerMonitor extends React.Component {
+      constructor(props) {
+        super(props)
+
+        this.state = {
+          about: undefined,
+          contentFailedDeployments: "?",
+          usersInServer: 0,
+        }
+      }
+      componentDidMount() {
+        this.getNodeStatus()
+      }
+
+      async getNodeStatus() {
+        this.getContentFailedDeployments()
+
+        const res = await fetch(`${this.props.address}/about`)
+        const about = await res.json()
+
+        this.setState({ about, usersInServer: about.comms ? about.comms.usersCount : 0 })
+        this.props.contributeUsers(about.comms.usersCount)
+      }
+
+      getContentFailedDeployments() {
+        fetch(`${this.props.address}/content/failed-deployments`)
+          .then((res) => res.json())
+          .then((data) => this.setState({ contentFailedDeployments: data }))
+          .catch(console.error)
+      }
+
+      render() {
+        let title = this.props.address
+        let isHttps = false
+        if (this.props.address.startsWith("https://")) {
+          title = this.props.address.substring("https://".length)
+          isHttps = true
+        }
+
+        if (!this.state.about) {
+          return (
+            <div
+              className={
+                (this.props.expectedEthNetwork === "mainnet" ? "node-prd" : "node-dev") +
+                (isHttps ? "" : " node-wrong") +
+                " " +
+                getHealthLabel(false).toLowerCase()
+              }
+            >
+              <div className="node-title">{title}</div>
+            </div>
+          )
+        }
+        let globalHealth = getHealthLabel(this.state.about.healthy)
+        return (
+          <div
+            className={
+              (this.props.expectedEthNetwork === "mainnet" ? "node-prd" : "node-dev") +
+              (isHttps ? "" : " node-wrong") +
+              " " +
+              globalHealth.toLowerCase()
+            }
+          >
+            <div className="node-title">{title}</div>
+            <div className="server-node-users">
+              # {this.state.about.configurations.realmName}: {this.state.usersInServer}
+            </div>
+            <ContentServer
+              status={this.state.about}
+              address={this.props.address}
+              failedDeployments={this.state.contentFailedDeployments}
+              expectedEthNetwork={this.props.expectedEthNetwork}
+              realm={this.state.about.configurations.realmName}
+              health={getHealthLabel(this.state.about.content.healthy)}
+            />
+            <LambdasServer
+              status={this.state.about}
+              address={this.props.address}
+              realm={this.state.about.configurations.realmName}
+              health={getHealthLabel(this.state.about.lambdas.healthy)}
+            />
+            {this.state.about.comms && <ArchipelagoServer
+              status={this.state.about}
+              address={this.props.address}
+              health={getHealthLabel(this.state.about.comms.healthy)}
+            />}
+          </div>
+        )
+      }
+    }
+
+    class WorldsServerMonitor extends React.Component {
+      constructor(props) {
+        super(props)
+
+        this.state = {
+          commitHash: 'unknown',
+          content: {
+            worldsCount: { ens: 0, dcl: 0 },
+          },
+          comms: {
+            adapterType: '',
+            statusUrl: undefined,
+            commitHash: 'unknown',
+            usersInServer: 0,
+            worldsWithUsers: 0,
+          },
+          health: {
+            content: undefined,
+            comms: undefined,
+          },
+        }
+      }
+
+      componentDidMount() {
+        this.getWorldsNodeStatus()
+      }
+
+      async getWorldsNodeStatus() {
+        try {
+          await fetch(`${this.props.address}/status`)
+            .then((data) => data.json())
+            .then(async (data) => {
+              this.setState({
+                ...this.state,
+                content: {
+                  ...this.state.content,
+                  commitHash: data.content.commitHash,
+                  worldsCount: typeof data.content.worldsCount === 'number' ? { ens: 0, dcl: data.content.worldsCount } : data.content.worldsCount
+                },
+                comms: {
+                  ...this.state.comms,
+                  adapterType: data.comms.adapterType,
+                  statusUrl: data.comms.statusUrl,
+                  commitHash: data.comms.commitHash,
+                  usersInServer: data.comms.users,
+                  worldsWithUsers: data.comms.rooms
+                },
+                health: {
+                  ...this.state.health,
+                  content: 'Healthy',
+                  comms: 'Healthy'
+                }
+              })
+
+              if (data.comms.adapterType === 'ws-room' && data.comms.statusUrl) {
+                await fetch(data.comms.statusUrl)
+                  .then((data) => data.json())
+                  .then(async (_) => {
+                    this.setState({
+                      health: {
+                        ...this.state.health,
+                        comms: 'Healthy'
+                      }
+                    })
+                  })
+                  .catch(() => {
+                    this.setState({
+                      health: {
+                        ...this.state.health,
+                        comms: 'Down'
+                      }
+                    })
+                  })
+              }
+
+              this.props.contributeUsers(data.comms.users, data.comms.rooms)
+            })
+            .catch(() => {
+              this.setState({
+                health: {
+                  ...this.state.health,
+                  content: 'Down'
+                }
+              })
+            })
+        } catch (err) {
+          console.error(err)
+        }
+      }
+
+      getGlobalHealth() {
+        const healths = Object.values(this.state.health)
+        if (healths.includes("Down")) return "Down"
+        if (healths.includes("Unhealthy")) return "Unhealthy"
+        return "Healthy"
+      }
+
+      getHealth(server) {
+        return this.state.health[server] ? this.state.health[server] : "Unknown"
+      }
+
+      render() {
+        let title = this.props.address
+        let isHttps = false
+        if (this.props.address.startsWith("https://")) {
+          title = this.props.address.substring("https://".length)
+          isHttps = true
+        }
+        let globalHealth = this.getGlobalHealth()
+        return (
+          <div
+            className={
+              (this.props.expectedEthNetwork === "mainnet" ? "node-prd" : "node-dev") +
+              (isHttps ? "" : " node-wrong") +
+              " " +
+              globalHealth.toLowerCase()
+            }
+          >
+            <div className="node-title">{title}</div>
+            <div className="server-node-users">
+              # {this.state.comms.usersInServer}
+            </div>
+            <WorldsContentServer
+              status={this.state.content}
+              address={this.props.address}
+              health={this.getHealth("content")}
+            />
+            <WorldsCommsServer
+              status={this.state.comms}
+              health={this.getHealth("comms")}
+            />
+
+          </div>
+        )
+      }
+    }
+
+    function ContentServer(props) {
+      if (props.realm === 'main') {
+        return (<div></div>)
+      }
+      return (
+        <div
+          className={"content " + props.health.toLowerCase()}
+          onClick={() =>
+            showFullStatus(props, "content", [{ name: "Failed Deployments", data: props.failedDeployments }])
+          }
+        >
+          <b>Content v{props.status.content.version}</b>
+          <br />
+          <b>State: {props.status.content.synchronizationStatus || "Unknown"}</b>
+          <br />
+          <div>Hash: {shortHash(props.status.content.commitHash)}</div>
+          <div>
+            Failed:{" "}
+            {Array.isArray(props.failedDeployments) ? props.failedDeployments.length : props.failedDeployments}
+          </div>
+        </div>
+      )
+    }
+
+    function WorldsContentServer(props) {
+      return (
+        <div className={"content " + props.health.toLowerCase()}>
+          <b>World Content Server</b>
+          <br />
+          <div>Hash: {shortHash(props.status.commitHash)}</div>
+          <div style={{ paddingLeft: "10px" }}> Deployed DCL worlds: {props.status.worldsCount.dcl}</div>
+          <div style={{ paddingLeft: "10px" }}> Deployed ENS worlds: {props.status.worldsCount.ens}</div>
+        </div>
+      )
+    }
+
+    function WorldsCommsServer(props) {
+      const commsHuman = {
+        'ws-room': 'WS Room Service',
+        'livekit': 'LiveKit'
+      }
+      return (
+        <div className={"comms " + props.health.toLowerCase()}>
+          <div>
+            <b>Comms: {commsHuman[props.status.adapterType] || 'Unknown'}</b>
+          </div>
+          <div>Hash: {shortHash(props.status.commitHash)}</div>
+          <div style={{ paddingLeft: "10px" }}>
+            Active users: <b>{props.status.usersInServer}</b>
+          </div>
+          <div style={{ paddingLeft: "10px" }}>
+            Inhabited worlds: <b>{props.status.worldsWithUsers}</b>
+          </div>
+        </div>
+      )
+    }
+
+    function LambdasServer(props) {
+      if (props.realm === 'main') {
+        return (<div></div>)
+      }
+      return (
+        <div className={"lambdas " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "lambdas", [])}>
+          <b>Lambdas v{props.status.lambdas.version}</b>
+          <div>Hash: {shortHash(props.status.lambdas.commitHash)}</div>
+        </div>
+      )
+    }
+
+    function ArchipelagoServer(props) {
+      return (
+        <div className={"archipelago " + props.health.toLowerCase()} onClick={() => showFullStatus(props, "archipelago", [])}>
+          <b>Archipelago v{props.status.comms.version}</b>
+          <div>Hash: {shortHash(props.status.comms.commitHash)}</div>
+        </div>
+      )
+    }
+
+    async function showFullStatus(props, server, extraInfos) {
+      const statusUrl = `${props.address}/${server}/status`
+      const status = await fetch(statusUrl).then((r) => r.json())
+      const contentHtml =
+        "<pre style='text-align:left'>" +
+        `<div>Status: ${JSON.stringify(status, null, 2)}</div>` +
+        extraInfos
+          .map((extraInfo) => `<div>${extraInfo.name}: ${JSON.stringify(extraInfo.data, null, 2)}</div>`)
+          .join() +
+        "</pre>"
+      Swal.fire({
+        title: `<a href=${statusUrl}>${statusUrl}</a>`,
+        html: contentHtml,
+        width: 1000,
+      })
+    }
+
+    class Servers extends React.Component {
+      constructor(props) {
+        super(props)
+        this.state = {
+          totalProductiveUsers: 0,
+          totalWorldsUsers: 0,
+          totalSepoliaWorldsUsers: 0,
+          totalSepoliaDevUsers: 0,
+          totalNonDAOMainnetUsers: 0,
+          syncCheck: undefined,
+        }
+      }
+
+      sumProductiveUsers(usersCount = 0) {
+        this.setState({ totalProductiveUsers: this.state.totalProductiveUsers + usersCount })
+      }
+
+      sumWorldsUsers(usersCount = 0) {
+        this.setState({ totalWorldsUsers: this.state.totalWorldsUsers + usersCount })
+      }
+
+      sumSepoliaWorldsUsers(usersCount = 0) {
+        this.setState({ totalSepoliaWorldsUsers: this.state.totalSepoliaWorldsUsers + usersCount })
+      }
+
+      sumNonDAOMainnetUsers(usersCount = 0) {
+        this.setState({ totalNonDAOMainnetUsers: this.state.totalNonDAOMainnetUsers + usersCount })
+      }
+
+      sumSepoliaDevUsers(usersCount = 0) {
+        this.setState({ totalSepoliaDevUsers: this.state.totalSepoliaDevUsers + usersCount })
+      }
+
+      renderDAOMainnetServers() {
+        return (
+          <div>
+            <div className="node-set">
+              {DAOMainnetServers.map((server) => {
+                return (
+                  <ServerMonitor
+                    address={server}
+                    expectedEthNetwork="mainnet"
+                    contributeUsers={(usersCount) => this.sumProductiveUsers(usersCount)}
+                  />
+                )
+              })}
+            </div>
+            <div className="total-productive-users">Total Users: {this.state.totalProductiveUsers}</div>
+          </div>
+        )
+      }
+
+      renderWorldMainnetServers() {
+        return (
+          <div>
+            <div className="node-set">
+              {worldsMainnetServers.map((server) => {
+                return (
+                  <WorldsServerMonitor
+                    address={server}
+                    expectedEthNetwork="mainnet"
+                    contributeUsers={(usersCount) => this.sumWorldsUsers(usersCount)}
+                  />
+                )
+              })}
+            </div>
+            <div className="total-productive-users">Total Worlds Users: {this.state.totalWorldsUsers}</div>
+          </div>
+        )
+      }
+
+      renderExtraServers() {
+        const currentUrl = window.location.href.toString()
+        if (currentUrl.indexOf("includeDevServers") >= 0) {
+          return (
+            <div>
+              <div className="node-set">
+                {nonDAOMainnetServers.map((server) => {
+                  return (
+                    <ServerMonitor
+                      address={server}
+                      expectedEthNetwork="mainnet"
+                      contributeUsers={(usersCount) => this.sumNonDAOMainnetUsers(usersCount)}
+                    />
+                  )
+                })}
+              </div>
+              <div className="total-productive-users">Total Users: {this.state.totalNonDAOMainnetUsers}</div>
+
+              <div className="node-set">
+                {zoneSepoliaServers.map((server) => {
+                  return (
+                    <ServerMonitor
+                      address={server}
+                      expectedEthNetwork="sepolia"
+                      contributeUsers={(usersCount) => this.sumSepoliaDevUsers(usersCount)}
+                    />
+                  )
+                })}
+              </div>
+              <div className="total-dev-users">Total Users (Sepolia): {this.state.totalSepoliaDevUsers}</div>
+
+              <div>
+                <div className="node-set">
+                  {worldsSepoliaServers.map((server) => {
+                    return (
+                      <WorldsServerMonitor
+                        address={server}
+                        expectedEthNetwork="sepolia"
+                        contributeUsers={(usersCount) => this.sumSepoliaWorldsUsers(usersCount)}
+                      />
+                    )
+                  })}
+                </div>
+                <div className="total-dev-users">Total Worlds Users: {this.state.totalSepoliaWorldsUsers}</div>
+              </div>
+
+
+            </div>
+          )
+        } else {
+          return <div />
+        }
+      }
+
+      render() {
+        return (
+          <div>
+            {this.renderDAOMainnetServers()}
+            {this.renderWorldMainnetServers()}
+            {this.renderExtraServers()}
+          </div>
+        )
+      }
+    }
+
+    ReactDOM.render(<Servers />, document.getElementById("root"))
+  </script>
+</body>
+
+</html>
