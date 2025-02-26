@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "prebuild": "node scripts/prebuild.js",
+    "prebuild": "node scripts/prebuild.cjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "jest",
