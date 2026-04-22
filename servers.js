@@ -21,7 +21,6 @@ const worldsMainnetServers = ["https://worlds-content-server.decentraland.org"];
 
 const zoneSepoliaServers = [
   "https://peer.decentraland.zone",
-  "https://peer-ue-2.decentraland.zone",
   "https://peer-ap1.decentraland.zone",
   "https://realm-provider.decentraland.zone/main",
 ];
