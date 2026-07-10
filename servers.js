@@ -4,7 +4,6 @@ const DAOMainnetServers = [
   "https://peer-eu1.decentraland.org",
   "https://peer-ap1.decentraland.org",
   "https://interconnected.online",
-  "https://peer.melonwave.com",
   "https://peer.uadevops.com",
   "https://peer.dclnodes.io",
   "https://realm-provider-ea.decentraland.org/main",
