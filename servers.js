@@ -9,17 +9,11 @@ const DAOMainnetServers = [
   "https://realm-provider-ea.decentraland.org/main",
 ];
 
-const nonDAOMainnetServers = [
-  "https://peer-testing.decentraland.org",
-  "https://peer-testing-2.decentraland.org"
-];
+const nonDAOMainnetServers = ["https://peer-testing.decentraland.org"];
 
 const worldsMainnetServers = ["https://worlds-content-server.decentraland.org"];
 
-const zoneSepoliaServers = [
-  "https://peer.decentraland.zone",
-  "https://realm-provider.decentraland.zone/main",
-];
+const zoneSepoliaServers = ["https://peer.decentraland.zone"];
 
 const worldsSepoliaServers = [
   "https://worlds-content-server.decentraland.zone",
